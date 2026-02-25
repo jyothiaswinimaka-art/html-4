@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWAASTHYA.AI — Healthcare for Every Indian</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root {
+  --saffron: #FF9933;
+  --white: #ffffff;
+  --india-green: #138808;
+  --navy: #000080;
+  --bg: #0a0f1e;
+  --bg2: #0d1528;
+  --surface: #111827;
+  --card: #141d2e;
+  --border: #1e2d45;
+  --text: #f0f6ff;
+  --muted: #7a94b8;
+  --accent: var(--saffron);
+  --accent2: var(--india-green);
+  --accent3: #00b4d8;
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --success: #10b981;
+}
+[data-theme="light"] {
+  --bg: #f8fafc; --bg2: #f1f5f9; --surface: #e8f0fe;
+  --card: #ffffff; --border: #cbd5e1; --text: #0f172a; --muted: #475569;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none;transition:background .3s,color .3s;}
+.cursor{position:fixed;width:10px;height:10px;background:var(--saffron);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 10px var(--saffron);}
+.cursor-ring{position:fixed;width:32px;height:32px;border:1.5px solid var(--saffron);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .12s;}
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(255,153,51,.03)1px,transparent 1px),linear-gradient(90deg,rgba(255,153,51,.03)1px,transparent 1px);background-size:50px 50px;}
+.bg-orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:orbF 12s ease-in-out infinite;}
+.orb1{width:400px;height:400px;background:radial-gradient(circle,rgba(255,153,51,.12)0%,transparent 70%);top:-100px;left:-80px;}
+.orb2{width:350px;height:350px;background:radial-gradient(circle,rgba(19,136,8,.1)0%,transparent 70%);bottom:0;right:-80px;animation-delay:4s;}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(0,0,128,.12)0%,transparent 70%);top:40%;left:40%;animation-delay:8s;}
+@keyframes orbF{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(20px,-20px)scale(1.1)}}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;align-items:center;justify-content:space-between;padding:10px 28px;background:rgba(10,15,30,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,153,51,.15);}
+[data-theme="light"] nav{background:rgba(248,250,252,.95);}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--saffron),var(--india-green));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 16px rgba(255,153,51,.5);}
+.logo-text{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--saffron);}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:block;}
+.nav-links{display:flex;gap:2px;flex-wrap:wrap;}
+.nav-btn{padding:6px 12px;border-radius:7px;border:none;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;color:var(--muted);background:transparent;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.nav-btn:hover,.nav-btn.active{color:var(--saffron);background:rgba(255,153,51,.1);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.lang-sel{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer;outline:none;font-family:'Poppins',sans-serif;}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .3s;}
+.icon-btn:hover{border-color:var(--saffron);box-shadow:0 0 12px rgba(255,153,51,.4);}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--india-green));display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;border:2px solid var(--saffron);box-shadow:0 0 10px rgba(255,153,51,.3);}
+
+/* PAGES */
+#app{position:relative;z-index:1;}
+.page{display:none;min-height:100vh;padding:80px 28px 60px;}
+.page.active{display:block;}
+
+/* LOGIN/ENROLL */
+#auth{padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.auth-container{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;width:100%;}
+.auth-left{background:linear-gradient(135deg,#0d1528 0%,#0a0f1e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 40px;position:relative;overflow:hidden;}
+.auth-left::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,153,51,.08),rgba(19,136,8,.06));pointer-events:none;}
+.auth-hero-title{font-family:'Tiro Devanagari Hindi',serif;font-size:56px;font-weight:700;line-height:1.1;margin-bottom:16px;text-align:center;}
+.auth-hero-title .saf{color:var(--saffron);}
+.auth-hero-title .wht{color:#fff;}
+.auth-hero-title .grn{color:var(--india-green);}
+.auth-sub{font-size:15px;color:var(--muted);text-align:center;max-width:400px;line-height:1.8;margin-bottom:32px;}
+.auth-stats{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;}
+.auth-stat{text-align:center;}
+.auth-stat-num{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--saffron);}
+.auth-stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
+.india-flag-bar{display:flex;height:4px;width:200px;margin:28px auto;border-radius:2px;overflow:hidden;}
+.flag-saffron{flex:1;background:var(--saffron);}
+.flag-white{flex:1;background:#fff;}
+.flag-green{flex:1;background:var(--india-green);}
+.auth-right{background:var(--card);display:flex;align-items:center;justify-content:center;padding:40px;}
+.auth-form-box{width:100%;max-width:450px;}
+.auth-tabs{display:flex;gap:0;margin-bottom:28px;background:var(--surface);border-radius:12px;padding:4px;}
+.auth-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-radius:9px;transition:all .2s;}
+.auth-tab.active{background:linear-gradient(135deg,var(--saffron),#e88000);color:#000;font-weight:700;}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fgroup{margin-bottom:14px;}
+.flabel{font-size:11px;color:var(--muted);margin-bottom:6px;display:block;font-weight:500;letter-spacing:.3px;}
+.finput,.fselect,.ftextarea{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9px;font-family:'Poppins',sans-serif;font-size:13px;transition:all .2s;outline:none;}
+.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--saffron);box-shadow:0 0 0 3px rgba(255,153,51,.12);}
+.ftextarea{resize:vertical;min-height:80px;}
+.auth-divider{text-align:center;margin:16px 0;color:var(--muted);font-size:12px;position:relative;}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:44%;height:1px;background:var(--border);}
+.auth-divider::before{left:0;} .auth-divider::after{right:0;}
+.report-upload-area{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:14px;}
+.report-upload-area:hover{border-color:var(--saffron);background:rgba(255,153,51,.04);}
+.report-upload-area input{display:none;}
+.camera-btn{display:flex;align-items:center;gap:8px;justify-content:center;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-family:'Poppins',sans-serif;transition:all .2s;width:100%;margin-bottom:10px;}
+.camera-btn:hover{border-color:var(--saffron);color:var(--saffron);}
+
+/* BTNS */
+.btn-primary{padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,var(--saffron),#e88000);color:#000;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;box-shadow:0 0 16px rgba(255,153,51,.35);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(255,153,51,.45);}
+.btn-green{padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,var(--india-green),#0d6b06);color:#fff;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;box-shadow:0 0 14px rgba(19,136,8,.3);}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(19,136,8,.4);}
+.btn-blue{padding:11px 24px;border-radius:10px;background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;}
+.btn-blue:hover{transform:translateY(-2px);}
+.btn-outline{padding:11px 24px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-weight:500;font-size:13px;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;}
+.btn-outline:hover{border-color:var(--saffron);color:var(--saffron);}
+.btn-danger{padding:9px 18px;border-radius:8px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:600;font-size:12px;border:none;cursor:pointer;font-family:'Poppins',sans-serif;}
+.btn-sm{padding:7px 14px;font-size:12px;}
+
+/* HERO */
+#home{padding:0;}
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 32px 60px;position:relative;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,153,51,.4);padding:7px 20px;border-radius:100px;font-size:12px;color:var(--saffron);margin-bottom:28px;background:rgba(255,153,51,.06);animation:fadeInD .8s ease;letter-spacing:1px;}
+.hero-badge-dot{width:6px;height:6px;background:var(--saffron);border-radius:50%;animation:pulse 1.5s infinite;}
+.hero-title{font-family:'Tiro Devanagari Hindi',serif;font-size:clamp(48px,8vw,96px);font-weight:700;line-height:1.05;margin-bottom:20px;animation:fadeInU .9s ease .2s both;}
+.ht-saffron{color:var(--saffron);text-shadow:0 0 30px rgba(255,153,51,.5);}
+.ht-white{color:#fff;}
+.ht-green{color:var(--india-green);text-shadow:0 0 30px rgba(19,136,8,.5);}
+.hero-sub{font-size:16px;color:var(--muted);max-width:640px;line-height:1.9;margin-bottom:36px;animation:fadeInU .9s ease .35s both;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeInU .9s ease .5s both;margin-bottom:48px;}
+.hero-btn-saffron{padding:14px 32px;border-radius:50px;background:var(--saffron);color:#000;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:8px;box-shadow:0 0 24px rgba(255,153,51,.4);}
+.hero-btn-saffron:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(255,153,51,.5);}
+.hero-btn-green{padding:14px 32px;border-radius:50px;background:transparent;color:var(--india-green);font-weight:700;font-size:15px;border:2px solid var(--india-green);cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:8px;}
+.hero-btn-green:hover{background:var(--india-green);color:#fff;transform:translateY(-3px);}
+.hero-btn-blue{padding:14px 32px;border-radius:50px;background:#0077b6;color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:8px;}
+.hero-btn-blue:hover{background:#00b4d8;transform:translateY(-3px);}
+.stats-box{background:rgba(13,21,40,.8);border:1px solid rgba(255,153,51,.15);border-radius:20px;padding:28px 40px;display:flex;gap:40px;flex-wrap:wrap;justify-content:center;backdrop-filter:blur(10px);animation:fadeInU .9s ease .65s both;}
+.stat-item .num{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:var(--saffron);}
+.stat-item .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* QUOTE TICKER */
+.ticker-wrap{overflow:hidden;border-top:1px solid rgba(255,153,51,.1);border-bottom:1px solid rgba(255,153,51,.1);padding:8px 0;margin:32px 0;}
+.ticker-track{display:flex;gap:80px;white-space:nowrap;animation:ticker 40s linear infinite;font-size:13px;color:var(--saffron);font-style:italic;}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* FEATURES */
+.section-header{text-align:center;margin-bottom:48px;}
+.section-tag{display:inline-block;padding:4px 16px;border-radius:100px;background:rgba(255,153,51,.08);border:1px solid rgba(255,153,51,.2);font-size:11px;color:var(--saffron);margin-bottom:12px;letter-spacing:1.5px;text-transform:uppercase;}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,3.5vw,42px);font-weight:700;}
+.section-sub{color:var(--muted);margin-top:8px;font-size:14px;}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;transition:all .3s;cursor:pointer;position:relative;overflow:hidden;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--saffron),transparent);transform:translateX(-100%);transition:transform .5s;}
+.feature-card:hover::before{transform:translateX(100%);}
+.feature-card:hover{border-color:rgba(255,153,51,.3);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.3);}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+.card-desc{color:var(--muted);font-size:12px;line-height:1.75;}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:18px;}
+.panel h3{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:18px;}
+
+/* DASHBOARD */
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.dash-welcome{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;}
+.dash-welcome span{color:var(--saffron);}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:transform .3s;}
+.kpi-card:hover{transform:translateY(-3px);}
+.kpi-num{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;}
+.kpi-label{font-size:12px;color:var(--muted);margin-top:3px;}
+.kpi-trend{font-size:11px;margin-top:6px;color:var(--success);}
+.kpi-glow{position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;filter:blur(25px);opacity:.3;}
+.patient-profile{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;display:flex;gap:24px;align-items:flex-start;margin-bottom:24px;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--india-green));display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;box-shadow:0 0 20px rgba(255,153,51,.3);}
+.profile-info{flex:1;}
+.profile-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
+.profile-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;}
+.profile-badge{padding:4px 12px;border-radius:100px;background:rgba(255,153,51,.1);border:1px solid rgba(255,153,51,.2);font-size:12px;color:var(--saffron);}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+/* CHAT */
+.chat-container{max-width:860px;margin:0 auto;}
+.chat-window{background:var(--card);border:1px solid var(--border);border-radius:18px;height:420px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;margin-bottom:12px;scroll-behavior:smooth;}
+.chat-window::-webkit-scrollbar{width:3px;}
+.chat-window::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.msg{display:flex;gap:10px;animation:msgIn .3s ease;}
+.msg.user{flex-direction:row-reverse;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}}
+.msg-avatar{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:linear-gradient(135deg,var(--saffron),var(--india-green));box-shadow:0 0 10px rgba(255,153,51,.3);}
+.msg.user .msg-avatar{background:var(--surface);border:1px solid var(--border);box-shadow:none;}
+.msg-bubble{max-width:78%;padding:11px 15px;border-radius:14px;font-size:13px;line-height:1.8;}
+.msg.bot .msg-bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px;}
+.msg.user .msg-bubble{background:linear-gradient(135deg,rgba(255,153,51,.12),rgba(19,136,8,.1));border:1px solid rgba(255,153,51,.2);border-bottom-right-radius:4px;}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:11px 15px;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;transition:all .2s;}
+.chat-input:focus{border-color:var(--saffron);box-shadow:0 0 14px rgba(255,153,51,.15);}
+.send-btn{padding:11px 20px;border-radius:12px;background:linear-gradient(135deg,var(--saffron),#e88000);border:none;color:#000;font-weight:700;cursor:pointer;transition:all .2s;font-size:16px;box-shadow:0 0 14px rgba(255,153,51,.3);}
+.send-btn:hover{transform:scale(1.05);}
+.voice-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;}
+.voice-btn.listening{border-color:var(--danger);background:rgba(239,68,68,.1);color:var(--danger);animation:voicePulse 1s infinite;}
+.voice-btn:hover{border-color:var(--saffron);}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.typing{display:flex;gap:4px;align-items:center;padding:11px 15px;}
+.dot{width:7px;height:7px;background:var(--muted);border-radius:50%;animation:typeDot 1.4s infinite;}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes typeDot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+.chip{padding:5px 12px;border-radius:100px;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s;background:var(--surface);color:var(--muted);font-family:'Poppins',sans-serif;}
+.chip:hover,.chip.sel{border-color:var(--saffron);color:var(--saffron);background:rgba(255,153,51,.08);}
+.disclaimer{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);border-radius:9px;padding:10px 14px;font-size:12px;color:var(--warn);margin-bottom:16px;display:flex;gap:8px;align-items:flex-start;}
+
+/* TRIAGE */
+.urgency-low{background:rgba(16,185,129,.1);color:var(--success);border:1px solid rgba(16,185,129,.25);padding:7px 14px;border-radius:100px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:7px;}
+.urgency-med{background:rgba(245,158,11,.1);color:var(--warn);border:1px solid rgba(245,158,11,.25);padding:7px 14px;border-radius:100px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:7px;}
+.urgency-high{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25);padding:7px 14px;border-radius:100px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:7px;}
+.progress-bar-bg{height:8px;background:var(--surface);border-radius:4px;overflow:hidden;margin:8px 0;}
+.progress-bar{height:100%;border-radius:4px;transition:width 1s ease;background:linear-gradient(90deg,var(--saffron),var(--india-green));box-shadow:0 0 8px rgba(255,153,51,.4);}
+
+/* BMI */
+.bmi-val{font-family:'Space Grotesk',sans-serif;font-size:72px;font-weight:700;color:var(--saffron);}
+
+/* MAP */
+.map-container{background:var(--card);border:1px solid var(--border);border-radius:18px;height:440px;position:relative;overflow:hidden;}
+#mapLeaflet{width:100%;height:100%;border-radius:18px;}
+
+/* HOSPITAL CARDS */
+.hosp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px;}
+.hosp-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .3s;text-align:center;}
+.hosp-card:hover,.hosp-card.selected{border-color:var(--saffron);background:rgba(255,153,51,.05);box-shadow:0 0 18px rgba(255,153,51,.12);}
+.hosp-icon{font-size:34px;margin-bottom:10px;}
+
+/* REMINDERS */
+.reminder-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:all .3s;}
+.reminder-item:hover{border-color:rgba(255,153,51,.25);}
+.r-badge{padding:4px 12px;border-radius:100px;font-size:11px;}
+
+/* SESSIONS */
+.session-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;gap:16px;align-items:center;transition:all .3s;margin-bottom:12px;}
+.session-card:hover{border-color:rgba(255,153,51,.3);}
+.doc-avatar{width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,var(--saffron),var(--india-green));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 0 14px rgba(255,153,51,.25);}
+
+/* EMERGENCY */
+.emergency-section{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(220,38,38,.06));border:1px solid rgba(239,68,68,.25);border-radius:18px;padding:28px;}
+.emergency-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px;}
+.emg-btn{padding:18px;border-radius:12px;border:none;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .3s;}
+.emg-btn:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(0,0,0,.4);}
+.emg-ambulance{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;}
+.emg-contact{background:linear-gradient(135deg,#d97706,#92400e);color:#fff;}
+.emg-location{background:linear-gradient(135deg,#059669,#065f46);color:#fff;}
+
+/* TIPS */
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
+.tip-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start;transition:all .3s;}
+.tip-card:hover{border-color:rgba(255,153,51,.25);transform:translateX(4px);}
+
+/* RECIPE */
+.recipe-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:all .3s;cursor:pointer;}
+.recipe-card:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,.3);border-color:rgba(255,153,51,.2);}
+.recipe-img{width:100%;height:140px;display:flex;align-items:center;justify-content:center;font-size:60px;}
+.recipe-body{padding:16px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:1000;background:var(--card);border:1px solid var(--saffron);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;animation:toastIn .3s ease;box-shadow:0 8px 28px rgba(0,0,0,.4),0 0 16px rgba(255,153,51,.2);}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px)}}
+
+/* CONTACT BAR */
+.contact-bar{position:fixed;bottom:14px;left:18px;z-index:150;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.contact-bar a{color:var(--muted);text-decoration:none;}
+.contact-bar .team{color:var(--saffron);font-weight:700;letter-spacing:1px;}
+
+/* ANIMATIONS */
+@keyframes fadeInD{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInU{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,153,51,.4)}50%{box-shadow:0 0 0 8px rgba(255,153,51,0)}}
+.slide-in{animation:slideIn .5s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(18px)}}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* EMERGENCY HUB */
+.first-aid-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all .3s;text-align:center;}
+.first-aid-card:hover{border-color:var(--danger);transform:translateY(-3px);box-shadow:0 12px 28px rgba(239,68,68,.15);}
+
+/* RETINAL */
+.retinal-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;cursor:pointer;transition:all .3s;}
+.retinal-card:hover{border-color:rgba(255,153,51,.3);transform:translateY(-3px);}
+
+/* BABY CARE */
+.baby-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .3s;}
+.baby-card:hover{border-color:rgba(255,153,51,.25);transform:translateY(-2px);}
+
+/* ASHA worker */
+.asha-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .3s;}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.status-online{background:var(--success);box-shadow:0 0 6px var(--success);}
+.status-offline{background:var(--muted);}
+
+/* MENU DROPDOWN */
+.menu-wrap{position:relative;}
+.menu-dropdown{display:none;position:absolute;top:44px;right:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;width:210px;box-shadow:0 14px 42px rgba(0,0,0,.4);z-index:300;}
+.menu-dropdown.open{display:block;animation:fadeIn .2s ease;}
+.menu-item{padding:9px 12px;border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:9px;transition:background .2s;}
+.menu-item:hover{background:rgba(255,153,51,.1);color:var(--saffron);}
+.menu-divider{height:1px;background:var(--border);margin:6px 0;}
+@keyframes fadeIn{from{opacity:0}}
+
+/* CHECKUP */
+.check-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;transition:all .3s;cursor:pointer;}
+.check-card:hover{border-color:var(--saffron);transform:translateY(-3px);box-shadow:0 12px 28px rgba(255,153,51,.12);}
+
+/* VOICE CONSENT */
+.consent-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;}
+.consent-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:32px;max-width:420px;width:100%;text-align:center;}
+
+/* SEARCH BAR */
+.search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-input{flex:1;min-width:220px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;transition:all .2s;}
+.search-input:focus{border-color:var(--saffron);}
+
+/* PRESCRIPTION LIST */
+.rx-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+
+/* DELIVERY */
+.pharmacy-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;transition:all .3s;}
+.pharmacy-card:hover{border-color:var(--saffron);}
+
+/* PUBLIC HEALTH DASHBOARD */
+.phd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
+.phd-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.hotspot-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.hotspot-item:last-child{border-bottom:none;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .auth-container{grid-template-columns:1fr;}
+  .auth-left{display:none;}
+  nav{padding:10px 14px;}
+  .nav-links{display:none;}
+  .page{padding:72px 14px 50px;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .dash-grid{grid-template-columns:1fr;}
+  .stats-box{gap:20px;padding:20px;}
+}
+@media(max-width:600px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+}
+/* PROFILE EDIT */
+.edit-profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;display:none;align-items:center;justify-content:center;padding:20px;}
+.edit-profile-modal.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:28px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;}
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="bg-grid"></div>
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+
+<!-- VOICE CONSENT MODAL -->
+<div class="consent-modal" id="voiceConsent" style="display:none;">
+  <div class="consent-box">
+    <div style="font-size:48px;margin-bottom:16px;">🎤</div>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:20px;margin-bottom:12px;">Voice Recording Consent</h3>
+    <p style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:20px;">SWAASTHYA.AI requests access to your microphone to enable voice-based health queries. Your voice data is processed locally and is NOT stored on any server. Do you consent?</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn-primary" onclick="grantVoiceConsent()">✅ I Consent</button>
+      <button class="btn-outline" onclick="document.getElementById('voiceConsent').style.display='none'">Decline</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="edit-profile-modal" id="editProfileModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:20px;">Edit Profile</h3>
+      <button class="icon-btn" onclick="closeEditProfile()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="fgroup"><label class="flabel">Full Name</label><input class="finput" id="ep-name" placeholder="Full name"></div>
+      <div class="fgroup"><label class="flabel">Age</label><input class="finput" id="ep-age" type="number" placeholder="Age"></div>
+      <div class="fgroup"><label class="flabel">Phone</label><input class="finput" id="ep-phone" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="fgroup"><label class="flabel">Email</label><input class="finput" id="ep-email" placeholder="Email address"></div>
+      <div class="fgroup"><label class="flabel">Occupation</label><input class="finput" id="ep-occ" placeholder="Occupation"></div>
+      <div class="fgroup"><label class="flabel">Blood Group</label>
+        <select class="fselect" id="ep-blood"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select>
+      </div>
+    </div>
+    <div class="fgroup"><label class="flabel">Location / Address</label><input class="finput" id="ep-loc" placeholder="City, State"></div>
+    <div class="fgroup"><label class="flabel">Emergency Contact</label><input class="finput" id="ep-emergency" placeholder="Emergency contact number"></div>
+    <div class="fgroup"><label class="flabel">Known Allergies / Conditions</label><textarea class="ftextarea" id="ep-conditions" placeholder="e.g. Diabetes, Hypertension, Penicillin allergy..."></textarea></div>
+    <button class="btn-primary" onclick="saveProfile()" style="width:100%;">💾 Save Profile</button>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav id="mainNav" style="display:none;">
+  <div class="logo" onclick="goto('home')">
+    <div class="logo-icon">⚕</div>
+    <div>
+      <div class="logo-text">SWAASTHYA.AI</div>
+      <div class="logo-sub">Healthcare for Every Indian</div>
+    </div>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <button class="nav-btn active" onclick="goto('home')">Home</button>
+    <button class="nav-btn" onclick="goto('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="goto('chat')">AI CareBot</button>
+    <button class="nav-btn" onclick="goto('triage')">Triage</button>
+    <button class="nav-btn" onclick="goto('appt')">Appointments</button>
+    <button class="nav-btn" onclick="goto('bmi')">BMI</button>
+    <button class="nav-btn" onclick="goto('map')">Find Hospital</button>
+    <button class="nav-btn" onclick="goto('cooking')">Healthy Food</button>
+    <button class="nav-btn" onclick="goto('sessions')">Dr. Sessions</button>
+    <button class="nav-btn" onclick="goto('tips')">Health Tips</button>
+    <button class="nav-btn" onclick="goto('emergency')">🚨 Emergency</button>
+  </div>
+  <div class="nav-right">
+    <select class="lang-sel" id="globalLang" onchange="setLang(this.value)">
+      <option value="en">🇬🇧 English</option>
+      <option value="hi">🇮🇳 हिन्दी</option>
+      <option value="ta">🇮🇳 தமிழ்</option>
+      <option value="te">🇮🇳 తెలుగు</option>
+      <option value="bn">🇧🇩 বাংলা</option>
+      <option value="kn">🇮🇳 ಕನ್ನಡ</option>
+    </select>
+    <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    <div class="menu-wrap">
+      <button class="icon-btn" onclick="toggleMenu()">⋮</button>
+      <div class="menu-dropdown" id="menuDrop">
+        <div class="menu-item" onclick="goto('reminder')">⏰ Medication Reminders</div>
+        <div class="menu-item" onclick="goto('delivery')">🚚 Medicine Delivery</div>
+        <div class="menu-item" onclick="goto('retinal')">👁 Retinal Health</div>
+        <div class="menu-item" onclick="goto('baby')">👶 Baby Care</div>
+        <div class="menu-item" onclick="goto('checkup')">🩺 Health Checkups</div>
+        <div class="menu-item" onclick="goto('asha')">👩‍⚕️ ASHA Worker Portal</div>
+        <div class="menu-item" onclick="goto('phd')">📊 Public Health Data</div>
+        <div class="menu-item" onclick="goto('firstaid')">🚑 First Aid Hub</div>
+        <div class="menu-item" onclick="goto('prescription')">📄 Prescriptions</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="openEditProfile()">✏️ Edit Profile</div>
+        <div class="menu-item" onclick="logout()">🚪 Logout</div>
+      </div>
+    </div>
+    <div class="user-avatar" id="userAvatarNav" onclick="goto('dashboard')">👤</div>
+  </div>
+</nav>
+
+<div id="app">
+<!-- ======================== AUTH PAGE ======================== -->
+<section id="auth" class="page active" style="padding:0;display:flex;">
+  <div class="auth-container">
+    <div class="auth-left">
+      <div style="margin-bottom:28px;">
+        <div class="logo" style="justify-content:center;margin-bottom:20px;">
+          <div class="logo-icon" style="width:52px;height:52px;font-size:26px;">⚕</div>
+          <div><div class="logo-text" style="font-size:22px;">SWAASTHYA.AI</div><div class="logo-sub">Healthcare for Every Indian</div></div>
+        </div>
+        <div class="india-flag-bar"></div>
+      </div>
+      <h1 class="auth-hero-title">
+        <span class="saf">स्वास्थ्य</span><br>
+        <span class="wht">for</span> <span class="grn">Every Village</span>
+      </h1>
+      <p class="auth-sub">Bridging the urban-rural healthcare gap with AI. Early symptom triage, telemedicine, multilingual support — accessible to every Indian, everywhere.</p>
+      <div class="auth-stats">
+        <div class="auth-stat"><div class="auth-stat-num">124K+</div><div class="auth-stat-label">Users Helped</div></div>
+        <div class="auth-stat"><div class="auth-stat-num">38K+</div><div class="auth-stat-label">Consultations</div></div>
+        <div class="auth-stat"><div class="auth-stat-num">2K+</div><div class="auth-stat-label">Villages Covered</div></div>
+        <div class="auth-stat"><div class="auth-stat-num">187</div><div class="auth-stat-label">Doctors Online</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-box">
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;">Welcome 🙏</h2>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:24px;">Your health, reimagined by AI</p>
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+          <button class="auth-tab" onclick="switchAuthTab('register')">New Patient</button>
+        </div>
+        <!-- LOGIN FORM -->
+        <div class="auth-form active" id="loginForm">
+          <div class="fgroup"><label class="flabel">Phone Number / Email</label><input class="finput" id="login-id" placeholder="+91 XXXXX XXXXX or email@example.com"></div>
+          <div class="fgroup"><label class="flabel">Password</label><input class="finput" id="login-pass" type="password" placeholder="Enter your password"></div>
+          <button class="btn-primary" onclick="doLogin()" style="width:100%;margin-top:8px;">🔐 Login to SWAASTHYA.AI</button>
+          <div class="auth-divider">or continue with</div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-outline" onclick="demoLogin()" style="flex:1;font-size:12px;">👤 Demo Login</button>
+            <button class="btn-outline" onclick="switchAuthTab('register')" style="flex:1;font-size:12px;">📝 Register</button>
+          </div>
+        </div>
+        <!-- REGISTER FORM -->
+        <div class="auth-form" id="registerForm">
+          <div style="max-height:55vh;overflow-y:auto;padding-right:4px;">
+            <div class="form-row">
+              <div class="fgroup"><label class="flabel">Full Name *</label><input class="finput" id="reg-name" placeholder="Your full name"></div>
+              <div class="fgroup"><label class="flabel">Age *</label><input class="finput" id="reg-age" type="number" placeholder="Age"></div>
+            </div>
+            <div class="form-row">
+              <div class="fgroup"><label class="flabel">Gender *</label>
+                <select class="fselect" id="reg-gender"><option>Male</option><option>Female</option><option>Other</option></select>
+              </div>
+              <div class="fgroup"><label class="flabel">Blood Group</label>
+                <select class="fselect" id="reg-blood"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select>
+              </div>
+            </div>
+            <div class="fgroup"><label class="flabel">Phone Number *</label><input class="finput" id="reg-phone" placeholder="+91 XXXXX XXXXX"></div>
+            <div class="fgroup"><label class="flabel">Email Address</label><input class="finput" id="reg-email" type="email" placeholder="email@example.com"></div>
+            <div class="fgroup"><label class="flabel">Occupation</label><input class="finput" id="reg-occ" placeholder="e.g. Farmer, Teacher, Student..."></div>
+            <div class="fgroup"><label class="flabel">Village / City, State *</label><input class="finput" id="reg-loc" placeholder="e.g. Raipur, Chhattisgarh"></div>
+            <div class="fgroup"><label class="flabel">Emergency Contact</label><input class="finput" id="reg-emg" placeholder="Emergency contact number"></div>
+            <div class="fgroup"><label class="flabel">Known Medical Conditions / Allergies</label><textarea class="ftextarea" id="reg-conditions" placeholder="e.g. Diabetes, hypertension..." style="min-height:60px;"></textarea></div>
+            <div class="fgroup"><label class="flabel">Create Password *</label><input class="finput" id="reg-pass" type="password" placeholder="Create a strong password"></div>
+            <div class="auth-divider">Upload Health Reports (Optional)</div>
+            <div class="report-upload-area" onclick="triggerUpload()">
+              <input type="file" id="reportInput" accept=".pdf,.jpg,.png,.jpeg" multiple onchange="handleReports(this)">
+              <div style="font-size:32px;margin-bottom:8px;">📁</div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Upload Previous Health Reports</div>
+              <div style="font-size:11px;color:var(--muted);">PDF, JPG, PNG accepted — Click or drag files here</div>
+              <div id="uploadedFiles" style="margin-top:10px;font-size:12px;color:var(--success);"></div>
+            </div>
+            <button class="camera-btn" onclick="openCamera()">📷 Take Photo with Camera</button>
+          </div>
+          <button class="btn-primary" onclick="doRegister()" style="width:100%;margin-top:12px;">🚀 Create My Health Profile</button>
+          <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;">Already registered? <span onclick="switchAuthTab('login')" style="color:var(--saffron);cursor:pointer;">Login here</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== HOME ======================== -->
+<section id="home" class="page" style="padding:0;">
+  <div id="hero">
+    <div class="hero-badge"><div class="hero-badge-dot"></div>AI-POWERED RURAL HEALTHCARE PLATFORM</div>
+    <h1 class="hero-title">
+      <span class="ht-saffron">स्वास्थ्य</span> <span class="ht-white">for</span><br>
+      <span class="ht-green">Every Village</span>
+    </h1>
+    <div class="ticker-wrap">
+      <div class="ticker-track" id="quoteTicker">
+        <span>💚 "Health is not just the absence of disease — it is a complete state of well-being."</span>
+        <span>🧬 "AI empowers doctors and connects patients faster — bridging the urban-rural gap."</span>
+        <span>🌿 "Your daily habits are the medicine your future self will thank you for."</span>
+        <span>🤖 "SWAASTHYA.AI — Your 24/7 health companion in your own language."</span>
+        <span>🏃 "Prevention today, protection forever — start your health journey now."</span>
+        <span>💊 "Right medicine, right time, right dose — never miss a beat."</span>
+        <span>🌍 "Healthcare should reach every corner of every village in India."</span>
+        <span>❤️ "A healthier you builds a healthier nation — one check-up at a time."</span>
+        <span>💚 "Health is not just the absence of disease — it is a complete state of well-being."</span>
+        <span>🧬 "AI empowers doctors and connects patients faster — bridging the urban-rural gap."</span>
+        <span>🌿 "Your daily habits are the medicine your future self will thank you for."</span>
+        <span>🤖 "SWAASTHYA.AI — Your 24/7 health companion in your own language."</span>
+        <span>🏃 "Prevention today, protection forever — start your health journey now."</span>
+        <span>💊 "Right medicine, right time, right dose — never miss a beat."</span>
+        <span>🌍 "Healthcare should reach every corner of every village in India."</span>
+        <span>❤️ "A healthier you builds a healthier nation — one check-up at a time."</span>
+      </div>
+    </div>
+    <p class="hero-sub" id="heroSub">From AI-powered triage to home medicine delivery, from doctor consultations to baby care — SWAASTHYA.AI is your complete health ecosystem, available 24/7 in your language.</p>
+    <div class="hero-btns">
+      <button class="hero-btn-saffron" onclick="goto('chat')">💬 Talk to CareBot</button>
+      <button class="hero-btn-green" onclick="goto('triage')">✨ Check Symptoms</button>
+      <button class="hero-btn-blue" onclick="goto('appt')">📅 Book Doctor</button>
+    </div>
+    <div class="stats-box">
+      <div class="stat-item"><div class="num" data-target="124000">0</div><div class="lbl">Users Helped</div></div>
+      <div class="stat-item"><div class="num" data-target="38000">0</div><div class="lbl">Consultations</div></div>
+      <div class="stat-item"><div class="num" data-target="2000">0</div><div class="lbl">Villages Covered</div></div>
+      <div class="stat-item"><div class="num" data-target="187">0</div><div class="lbl">Doctors Online</div></div>
+      <div class="stat-item"><div class="num" data-target="98">0</div><div class="lbl">% AI Accuracy</div></div>
+    </div>
+  </div>
+  <!-- FEATURES GRID -->
+  <div style="padding:80px 28px;max-width:1200px;margin:0 auto;">
+    <div class="section-header">
+      <div class="section-tag">Complete Healthcare Ecosystem</div>
+      <h2 class="section-title">Everything You Need, One Platform</h2>
+      <p class="section-sub">From diagnosis to delivery — AI-powered care at your fingertips</p>
+    </div>
+    <div class="cards-grid">
+      <div class="feature-card" onclick="goto('chat')"><div class="card-icon" style="background:rgba(255,153,51,.1);color:var(--saffron);">🤖</div><div class="card-title">AI CareBot</div><div class="card-desc">24/7 multilingual health assistant. Upload reports, get diet plans, medicine advice in your language with voice support.</div></div>
+      <div class="feature-card" onclick="goto('triage')"><div class="card-icon" style="background:rgba(239,68,68,.1);color:var(--danger);">🩺</div><div class="card-title">Symptom Triage</div><div class="card-desc">Describe symptoms, get AI risk score. Low → home care, Medium → PHC, High → hospital/ambulance referral.</div></div>
+      <div class="feature-card" onclick="goto('appt')"><div class="card-icon" style="background:rgba(19,136,8,.1);color:var(--india-green);">📅</div><div class="card-title">Online Appointments</div><div class="card-desc">Book with specialist doctors — dermatology, cardiac, ENT, dental. Upload reports directly to doctor.</div></div>
+      <div class="feature-card" onclick="goto('map')"><div class="card-icon" style="background:rgba(0,180,216,.1);color:var(--accent3);">🗺️</div><div class="card-title">Hospital Finder</div><div class="card-desc">Real-time GPS-based nearest hospital finder with optimized routing and specialty filters.</div></div>
+      <div class="feature-card" onclick="goto('emergency')"><div class="card-icon" style="background:rgba(239,68,68,.1);color:var(--danger);">🚨</div><div class="card-title">One-Tap Emergency</div><div class="card-desc">Instant ambulance call, emergency contact alert, live location SMS/WhatsApp sharing.</div></div>
+      <div class="feature-card" onclick="goto('delivery')"><div class="card-icon" style="background:rgba(255,153,51,.1);color:var(--saffron);">🚚</div><div class="card-title">10-Min Medicine Delivery</div><div class="card-desc">Order from nearby pharmacies with lightning-fast doorstep delivery.</div></div>
+      <div class="feature-card" onclick="goto('reminder')"><div class="card-icon" style="background:rgba(245,158,11,.1);color:var(--warn);">⏰</div><div class="card-title">Smart Reminders</div><div class="card-desc">Never miss medicine or checkup. Special prenatal reminders for expecting mothers.</div></div>
+      <div class="feature-card" onclick="goto('cooking')"><div class="card-icon" style="background:rgba(16,185,129,.1);color:var(--success);">🥗</div><div class="card-title">Healthy Recipes</div><div class="card-desc">Personalized nutrition for diabetes, heart health, weight management.</div></div>
+      <div class="feature-card" onclick="goto('sessions')"><div class="card-icon" style="background:rgba(0,119,182,.1);color:#0077b6);">👨‍⚕️</div><div class="card-title">Doctor Sessions</div><div class="card-desc">Live and recorded sessions by specialist doctors. Register and join health programs.</div></div>
+      <div class="feature-card" onclick="goto('firstaid')"><div class="card-icon" style="background:rgba(239,68,68,.1);color:var(--danger);">🚑</div><div class="card-title">Emergency Learning Hub</div><div class="card-desc">CPR, first aid, stroke, road accident guides with voice narration and offline support.</div></div>
+      <div class="feature-card" onclick="goto('asha')"><div class="card-icon" style="background:rgba(19,136,8,.1);color:var(--india-green);">👩‍⚕️</div><div class="card-title">ASHA/ANM Portal</div><div class="card-desc">Frontline health worker companion with voice data entry, offline sync, auto-reports.</div></div>
+      <div class="feature-card" onclick="goto('phd')"><div class="card-icon" style="background:rgba(255,153,51,.1);color:var(--saffron);">📊</div><div class="card-title">Public Health Dashboard</div><div class="card-desc">Real-time disease hotspots, outbreak trends from govt open data and WHO datasets.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== DASHBOARD ======================== -->
+<section id="dashboard" class="page">
+  <div class="dash-header slide-in">
+    <div class="dash-welcome">Welcome back, <span id="dashName">Patient</span> 🙏</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-primary btn-sm" onclick="openEditProfile()">✏️ Edit Profile</button>
+      <button class="btn-outline btn-sm" onclick="goto('chat')">🤖 Ask AI</button>
+    </div>
+  </div>
+  <!-- Patient Profile Card -->
+  <div class="patient-profile slide-in">
+    <div class="profile-avatar" id="dashAvatar">👤</div>
+    <div class="profile-info">
+      <div class="profile-name" id="dashFullName">Loading...</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:4px;" id="dashMetaLine">—</div>
+      <div class="profile-meta" id="dashBadges" style="margin-top:10px;"></div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Health Score</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:var(--saffron);" id="healthScore">—</div>
+      <div style="font-size:11px;color:var(--success);">✓ Profile Active</div>
+    </div>
+  </div>
+  <!-- KPI Cards -->
+  <div class="kpi-grid slide-in">
+    <div class="kpi-card"><div class="kpi-glow" style="background:var(--saffron);"></div><div class="kpi-num" style="color:var(--saffron);" id="kpi-appt">0</div><div class="kpi-label">Appointments</div><div class="kpi-trend">↑ This month</div></div>
+    <div class="kpi-card"><div class="kpi-glow" style="background:var(--india-green);"></div><div class="kpi-num" style="color:var(--india-green);" id="kpi-sessions">0</div><div class="kpi-label">Sessions Registered</div><div class="kpi-trend">↑ Active</div></div>
+    <div class="kpi-card"><div class="kpi-glow" style="background:var(--accent3);"></div><div class="kpi-num" style="color:var(--accent3);" id="kpi-reports">0</div><div class="kpi-label">Reports Uploaded</div><div class="kpi-trend">✓ Secure</div></div>
+    <div class="kpi-card"><div class="kpi-glow" style="background:var(--warn);"></div><div class="kpi-num" style="color:var(--warn);" id="kpi-reminders">0</div><div class="kpi-label">Active Reminders</div><div class="kpi-trend">⏰ Next: Today</div></div>
+  </div>
+  <!-- Appointments + Sessions + Reports -->
+  <div class="dash-grid slide-in">
+    <div class="panel">
+      <h3>📅 My Appointments</h3>
+      <div id="dashApptList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No appointments yet. <span onclick="goto('appt')" style="color:var(--saffron);cursor:pointer;">Book one →</span></div></div>
+    </div>
+    <div class="panel">
+      <h3>👨‍⚕️ Registered Sessions</h3>
+      <div id="dashSessionsList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No sessions registered. <span onclick="goto('sessions')" style="color:var(--saffron);cursor:pointer;">Browse →</span></div></div>
+    </div>
+    <div class="panel">
+      <h3>📁 My Health Reports</h3>
+      <div id="dashReportList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No reports uploaded. <span onclick="goto('prescription')" style="color:var(--saffron);cursor:pointer;">Upload →</span></div></div>
+    </div>
+    <div class="panel">
+      <h3>⏰ Active Reminders</h3>
+      <div id="dashReminderList"><div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">No reminders set. <span onclick="goto('reminder')" style="color:var(--saffron);cursor:pointer;">Add one →</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== AI CHATBOT ======================== -->
+<section id="chat" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">AI Powered · Multilingual · Voice Enabled</div>
+    <h2 class="section-title">SWAASTHYA CareBot</h2>
+    <p class="section-sub">Ask in your language — voice or text. Upload reports for personalized guidance.</p>
+  </div>
+  <div class="chat-container slide-in">
+    <div class="disclaimer">⚠️ <span>General health education only. For emergencies call 108. Always consult a licensed physician.</span></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="chip sel" onclick="setChatLang('en',this)">English</button>
+      <button class="chip" onclick="setChatLang('hi',this)">हिन्दी</button>
+      <button class="chip" onclick="setChatLang('ta',this)">தமிழ்</button>
+      <button class="chip" onclick="setChatLang('te',this)">తెలుగు</button>
+      <button class="chip" onclick="setChatLang('bn',this)">বাংলা</button>
+      <button class="chip" onclick="setChatLang('kn',this)">ಕನ್ನಡ</button>
+    </div>
+    <div class="chat-window" id="chatWindow"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
+      <label style="font-size:12px;color:var(--muted);">📎 Upload Report:</label>
+      <input type="file" id="reportFile" accept=".pdf,.jpg,.png" style="font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 10px;cursor:pointer;" onchange="handleReportUpload(this)">
+    </div>
+    <div class="chat-input-row">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice Input">🎤</button>
+      <input class="chat-input" id="chatInput" placeholder="Ask about symptoms, diet, medicines... (type or use voice)" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="send-btn" onclick="sendChat()">➤</button>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--muted);">Quick:</span>
+      <button class="chip" onclick="quickChat('What are dengue symptoms and treatment?')">Dengue?</button>
+      <button class="chip" onclick="quickChat('Give me a diet plan for weight loss')">Diet plan</button>
+      <button class="chip" onclick="quickChat('I have diabetes type 2, what should I eat and avoid?')">Diabetes diet</button>
+      <button class="chip" onclick="quickChat('Baby vaccination schedule India 0-5 years')">Baby vaccines</button>
+      <button class="chip" onclick="quickChat('How to control high blood pressure naturally?')">BP control</button>
+      <button class="chip" onclick="quickChat('Best exercises for weight gain and muscle building')">Exercise plan</button>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== TRIAGE ======================== -->
+<section id="triage" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">AI Triage Engine</div>
+    <h2 class="section-title">Symptom Assessment</h2>
+    <p class="section-sub">AI-powered risk analysis with smart referral guidance</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1100px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>Patient Details</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fgroup"><label class="flabel">Age</label><input class="finput" id="t-age" type="number" placeholder="Years"></div>
+        <div class="fgroup"><label class="flabel">Gender</label><select class="fselect" id="t-gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+      </div>
+      <div class="fgroup"><label class="flabel">Duration of Symptoms</label><select class="fselect" id="t-duration"><option>Today</option><option>2-3 days</option><option>1 week</option><option>More than 1 week</option></select></div>
+      <div class="fgroup"><label class="flabel">Describe your condition</label><textarea class="ftextarea" id="t-desc" placeholder="Describe your symptoms in detail..."></textarea></div>
+      <div class="fgroup">
+        <label class="flabel">Select Symptoms (tap to select)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;" id="symptomChips">
+          <span class="chip" onclick="toggleChip(this)">🌡️ Fever</span>
+          <span class="chip" onclick="toggleChip(this)">🤕 Headache</span>
+          <span class="chip" onclick="toggleChip(this)">😮‍💨 Cough</span>
+          <span class="chip" onclick="toggleChip(this)">💔 Chest Pain</span>
+          <span class="chip" onclick="toggleChip(this)">😤 Breathlessness</span>
+          <span class="chip" onclick="toggleChip(this)">🤢 Nausea</span>
+          <span class="chip" onclick="toggleChip(this)">🤮 Vomiting</span>
+          <span class="chip" onclick="toggleChip(this)">💩 Diarrhea</span>
+          <span class="chip" onclick="toggleChip(this)">😴 Fatigue</span>
+          <span class="chip" onclick="toggleChip(this)">😵 Dizziness</span>
+          <span class="chip" onclick="toggleChip(this)">🦵 Joint Pain</span>
+          <span class="chip" onclick="toggleChip(this)">🔴 Rash/Skin</span>
+          <span class="chip" onclick="toggleChip(this)">😶 Unconsciousness</span>
+          <span class="chip" onclick="toggleChip(this)">🤙 Abdominal Pain</span>
+          <span class="chip" onclick="toggleChip(this)">🫀 Palpitations</span>
+          <span class="chip" onclick="toggleChip(this)">👁️ Vision Changes</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn-primary" onclick="runTriage()" style="flex:1;">🔍 Analyze Symptoms</button>
+        <button class="voice-btn" onclick="startTriageVoice()" title="Voice input for symptoms">🎤</button>
+      </div>
+    </div>
+    <div class="panel" id="triageResult">
+      <h3>AI Assessment</h3>
+      <div id="resultEmpty" style="text-align:center;color:var(--muted);padding:60px 0;">
+        <div style="font-size:52px;margin-bottom:14px;opacity:.35;">🩺</div>
+        <p>Enter symptoms to see AI assessment</p>
+      </div>
+      <div id="resultContent" style="display:none;">
+        <div id="urgencyBadge" style="margin-bottom:16px;"></div>
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Risk Score</span><span id="riskScore" style="font-weight:700;"></span></div>
+          <div class="progress-bar-bg"><div class="progress-bar" id="riskBar"></div></div>
+        </div>
+        <div id="resultFindings" style="font-size:13px;line-height:1.85;color:var(--muted);"></div>
+        <div class="disclaimer" style="margin-top:16px;">⚠️ This is NOT a diagnosis. Please consult a certified medical professional.</div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-primary btn-sm" onclick="goto('appt')">📅 Book Appointment</button>
+          <button class="btn-green btn-sm" onclick="goto('map')">🗺️ Find Hospital</button>
+          <button class="btn-danger btn-sm" onclick="goto('emergency')">🚨 Emergency</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== APPOINTMENTS ======================== -->
+<section id="appt" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Online Booking</div>
+    <h2 class="section-title">Book an Appointment</h2>
+    <p class="section-sub">Choose specialty, upload reports, book instantly</p>
+  </div>
+  <div class="slide-in" style="max-width:1000px;margin:0 auto;">
+    <div class="hosp-cards" id="specCards">
+      <div class="hosp-card selected" onclick="selectSpec(this,'General Medicine')"><div class="hosp-icon">🏥</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">General Medicine</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">General physician</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Dermatology')"><div class="hosp-icon">✨</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Dermatology</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Skin, hair & nails</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'ENT')"><div class="hosp-icon">👂</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">ENT</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Ear, nose & throat</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Dental')"><div class="hosp-icon">🦷</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Dental</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Teeth & oral health</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Cardiology')"><div class="hosp-icon">❤️</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Cardiology</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Heart health</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Orthopaedic')"><div class="hosp-icon">🦴</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Orthopaedic</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Bones & joints</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Paediatrics')"><div class="hosp-icon">👶</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Paediatrics</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Children's health</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Gynaecology')"><div class="hosp-icon">🌸</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Gynaecology</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Women's health</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Neurology')"><div class="hosp-icon">🧠</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Neurology</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Brain & nerves</div></div>
+      <div class="hosp-card" onclick="selectSpec(this,'Ophthalmology')"><div class="hosp-icon">👁️</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Ophthalmology</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Eyes & vision</div></div>
+    </div>
+    <div class="panel">
+      <h3>📋 Booking Details</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="fgroup"><label class="flabel">Full Name</label><input class="finput" id="a-name" placeholder="Your name"></div>
+        <div class="fgroup"><label class="flabel">Phone</label><input class="finput" id="a-phone" placeholder="+91 XXXXX XXXXX"></div>
+        <div class="fgroup"><label class="flabel">Preferred Date</label><input class="finput" id="a-date" type="date"></div>
+        <div class="fgroup"><label class="flabel">Time Slot</label>
+          <select class="fselect" id="a-slot"><option>Morning (9AM–12PM)</option><option>Afternoon (12PM–4PM)</option><option>Evening (4PM–7PM)</option></select>
+        </div>
+      </div>
+      <div class="fgroup"><label class="flabel">Upload Medical Reports (sent directly to doctor)</label><input type="file" id="a-reports" accept=".pdf,.jpg,.png" multiple class="finput" style="cursor:pointer;"></div>
+      <div style="font-size:11px;color:var(--success);margin-bottom:14px;">✓ Reports are securely encrypted and sent to your assigned doctor.</div>
+      <div class="fgroup"><label class="flabel">Notes for Doctor</label><textarea class="ftextarea" id="a-notes" placeholder="Any specific concerns or medical history..."></textarea></div>
+      <button class="btn-primary" onclick="bookAppt()" style="width:100%;">📅 Confirm Appointment</button>
+    </div>
+    <div id="apptConfirmation" style="display:none;"></div>
+  </div>
+</section>
+
+<!-- ======================== BMI ======================== -->
+<section id="bmi" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Body Metrics</div>
+    <h2 class="section-title">BMI Calculator</h2>
+    <p class="section-sub">Personalized diet & exercise plan based on your body metrics</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>Your Details</h3>
+      <div class="fgroup"><label class="flabel">Full Name</label><input class="finput" id="bmi-name" placeholder="Your name"></div>
+      <div class="fgroup"><label class="flabel">Age</label><input class="finput" id="bmi-age" type="number" placeholder="Years"></div>
+      <div class="fgroup"><label class="flabel">Height (cm)</label><input class="finput" id="bmi-height" type="number" placeholder="e.g. 165"></div>
+      <div class="fgroup"><label class="flabel">Weight (kg)</label><input class="finput" id="bmi-weight" type="number" placeholder="e.g. 65"></div>
+      <div class="fgroup"><label class="flabel">Gender</label><select class="fselect" id="bmi-gender"><option>Male</option><option>Female</option></select></div>
+      <div class="fgroup"><label class="flabel">Activity Level</label>
+        <select class="fselect" id="bmi-activity"><option>Sedentary (desk job)</option><option>Light (1-3 days/week)</option><option>Moderate (3-5 days/week)</option><option>Active (6-7 days/week)</option></select>
+      </div>
+      <button class="btn-primary" onclick="calcBMI()" style="width:100%;">⚖️ Calculate BMI</button>
+    </div>
+    <div class="panel" id="bmiResultPanel">
+      <h3>Your Results</h3>
+      <div id="bmiEmpty" style="text-align:center;color:var(--muted);padding:50px 0;"><div style="font-size:52px;margin-bottom:14px;opacity:.35;">⚖️</div><p>Fill details to see results</p></div>
+      <div id="bmiContent" style="display:none;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== MAP / HOSPITAL FINDER ======================== -->
+<section id="map" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Real-Time GPS Routing</div>
+    <h2 class="section-title">Find Nearest Hospital</h2>
+    <p class="section-sub">Live GPS locates nearest hospitals with shortest route & specialty filter</p>
+  </div>
+  <div class="slide-in" style="max-width:1000px;margin:0 auto;">
+    <div class="search-bar">
+      <input class="search-input" id="map-from" placeholder="📍 Your location (auto-detected via GPS)...">
+      <select class="fselect" id="map-spec" style="width:200px;"><option>All Hospitals</option><option>General</option><option>Cardiac</option><option>Dental</option><option>ENT</option><option>Orthopaedic</option><option>Maternity</option><option>Paediatrics</option><option>Emergency</option></select>
+      <button class="btn-primary" onclick="findHospitals()">📍 Find Now</button>
+      <button class="btn-green" onclick="getUserLocation()">🛰️ Use GPS</button>
+    </div>
+    <div class="map-container">
+      <div id="mapLeaflet"></div>
+    </div>
+    <div id="hospitalList" style="margin-top:16px;"></div>
+  </div>
+</section>
+
+<!-- ======================== MEDICINE DELIVERY ======================== -->
+<section id="delivery" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Express Delivery</div>
+    <h2 class="section-title">Medicine Delivery in 10 Minutes</h2>
+    <p class="section-sub">Order from nearest pharmacies — delivered to your doorstep</p>
+  </div>
+  <div style="max-width:900px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>🛒 Order Medicines</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fgroup"><label class="flabel">Your Name</label><input class="finput" id="del-name" placeholder="Full name"></div>
+        <div class="fgroup"><label class="flabel">Phone</label><input class="finput" id="del-phone" placeholder="+91 XXXXX XXXXX"></div>
+        <div class="fgroup" style="grid-column:span 2;"><label class="flabel">Delivery Address</label><input class="finput" id="del-addr" placeholder="Full address with landmark..."></div>
+        <div class="fgroup" style="grid-column:span 2;"><label class="flabel">Medicines Required</label><textarea class="ftextarea" id="del-meds" placeholder="e.g. Paracetamol 500mg x2, Azithromycin 250mg x1..."></textarea></div>
+        <div class="fgroup" style="grid-column:span 2;"><label class="flabel">Upload Prescription (optional)</label><input type="file" accept=".pdf,.jpg,.png" class="finput" style="cursor:pointer;" id="del-rx"></div>
+      </div>
+      <button class="btn-primary" onclick="orderMedicine()" style="width:100%;">🚚 Place Order — 10 Min Delivery</button>
+    </div>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:20px 0 12px;">Nearby Pharmacies</h3>
+    <div class="cards-grid">
+      <div class="pharmacy-card"><div style="font-size:36px;margin-bottom:10px;">💊</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">MedPlus Pharmacy</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">0.4 km · Open 24/7</div><div style="font-size:11px;color:var(--success);margin-top:4px;">● Available</div></div>
+      <div class="pharmacy-card"><div style="font-size:36px;margin-bottom:10px;">🏪</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">Apollo Pharmacy</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">0.7 km · 8AM–10PM</div><div style="font-size:11px;color:var(--success);margin-top:4px;">● Available</div></div>
+      <div class="pharmacy-card"><div style="font-size:36px;margin-bottom:10px;">🧪</div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;">NetMeds Express</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">1.1 km · Open 24/7</div><div style="font-size:11px;color:var(--warn);margin-top:4px;">⚡ Busy</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== REMINDERS ======================== -->
+<section id="reminder" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Smart Notifications</div>
+    <h2 class="section-title">Medication Reminders</h2>
+    <p class="section-sub">Never miss medicine or check-up. Special prenatal support for expecting mothers.</p>
+  </div>
+  <div style="max-width:800px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>➕ Add Reminder</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fgroup"><label class="flabel">Medicine/Appointment Name</label><input class="finput" id="r-name" placeholder="e.g. Metformin 500mg"></div>
+        <div class="fgroup"><label class="flabel">Type</label>
+          <select class="fselect" id="r-type"><option>💊 Medicine</option><option>🩺 Doctor Appointment</option><option>🤰 Prenatal Check-up</option><option>💉 Vaccination</option></select>
+        </div>
+        <div class="fgroup"><label class="flabel">Time</label><input class="finput" id="r-time" type="time"></div>
+        <div class="fgroup"><label class="flabel">Frequency</label>
+          <select class="fselect" id="r-freq"><option>Daily</option><option>Twice Daily</option><option>Weekly</option><option>One Time</option></select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addReminder()">⏰ Set Reminder</button>
+    </div>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px;">Active Reminders</h3>
+    <div id="reminderList">
+      <div class="reminder-item"><div style="font-size:22px;">💊</div><div class="reminder-info" style="flex:1;"><div style="font-weight:600;">Metformin 500mg</div><div style="font-size:12px;color:var(--muted);">Daily · 8:00 AM & 8:00 PM</div></div><span class="r-badge" style="background:rgba(255,153,51,.1);color:var(--saffron);border:1px solid rgba(255,153,51,.2);">Active</span></div>
+      <div class="reminder-item"><div style="font-size:22px;">🤰</div><div class="reminder-info" style="flex:1;"><div style="font-weight:600;">Prenatal Check-up — Dr. Kavitha</div><div style="font-size:12px;color:var(--muted);">2 Mar 2026 · Reminder in 5 days</div></div><span class="r-badge" style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);">Upcoming</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== HEALTHY COOKING ======================== -->
+<section id="cooking" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Healthy Living</div>
+    <h2 class="section-title">Healthy Recipes for Every Body</h2>
+    <p class="section-sub">Personalized recipes for diabetes, heart health, weight management & more</p>
+  </div>
+  <div class="slide-in">
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px;justify-content:center;">
+      <button class="chip sel" onclick="filterRecipes('all',this)">All</button>
+      <button class="chip" onclick="filterRecipes('weightloss',this)">Weight Loss</button>
+      <button class="chip" onclick="filterRecipes('weightgain',this)">Weight Gain</button>
+      <button class="chip" onclick="filterRecipes('diabetes',this)">Diabetes</button>
+      <button class="chip" onclick="filterRecipes('heart',this)">Heart Health</button>
+      <button class="chip" onclick="filterRecipes('immunity',this)">Immunity</button>
+      <button class="chip" onclick="filterRecipes('baby',this)">Baby Food</button>
+    </div>
+    <div class="cards-grid" id="recipeGrid"></div>
+  </div>
+</section>
+
+<!-- ======================== DOCTOR SESSIONS ======================== -->
+<section id="sessions" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Live & Recorded</div>
+    <h2 class="section-title">Doctor Online Sessions</h2>
+    <p class="section-sub">Attend live sessions or watch recordings. Register to participate.</p>
+  </div>
+  <div style="max-width:900px;margin:0 auto;" class="slide-in" id="sessionsList"></div>
+</section>
+
+<!-- ======================== HEALTH TIPS ======================== -->
+<section id="tips" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Evidence-Based</div>
+    <h2 class="section-title">Daily Health Tips</h2>
+    <p class="section-sub">Science-backed tips for a longer, healthier, happier life</p>
+  </div>
+  <div class="tips-grid slide-in" id="tipsGrid"></div>
+</section>
+
+<!-- ======================== EMERGENCY ======================== -->
+<section id="emergency" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">One-Tap Emergency</div>
+    <h2 class="section-title" style="color:var(--danger);">🚨 Emergency Response</h2>
+    <p class="section-sub">Instant ambulance, emergency contacts, live location sharing</p>
+  </div>
+  <div style="max-width:900px;margin:0 auto;" class="slide-in">
+    <div class="emergency-section">
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--danger);margin-bottom:8px;">⚡ One-Tap Emergency Actions</h3>
+      <p style="color:var(--muted);font-size:13px;">These actions work even on poor internet. GPS location is shared instantly.</p>
+      <div class="emergency-btns">
+        <button class="emg-btn emg-ambulance" onclick="callAmbulance()">🚑 Call Ambulance (108)</button>
+        <button class="emg-btn emg-contact" onclick="callEmergencyContact()">📞 Emergency Contact</button>
+        <button class="emg-btn emg-location" onclick="shareLocation()">📍 Share Live Location</button>
+        <button class="emg-btn" style="background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;" onclick="callPolice()">🚔 Call Police (100)</button>
+        <button class="emg-btn" style="background:linear-gradient(135deg,#1d4ed8,#1e3a8a);color:#fff;" onclick="callFireBrigade()">🚒 Fire Brigade (101)</button>
+        <button class="emg-btn" style="background:linear-gradient(135deg,#0f766e,#134e4a);color:#fff;" onclick="goto('map')">🏥 Nearest Hospital</button>
+      </div>
+    </div>
+    <div style="margin-top:24px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:16px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;">📍 Your Current Location</h3>
+      <div id="emergencyLocation" style="color:var(--muted);font-size:13px;">
+        <button class="btn-primary" onclick="getUserLocationEmergency()">🛰️ Detect My Location Now</button>
+      </div>
+    </div>
+    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="panel"><h3 style="font-size:16px;color:var(--danger);">🆘 Emergency Numbers</h3>
+        <div style="font-size:13px;line-height:2.2;color:var(--muted);">
+          <div>🚑 Ambulance: <strong style="color:var(--text);">108</strong></div>
+          <div>🚔 Police: <strong style="color:var(--text);">100</strong></div>
+          <div>🚒 Fire: <strong style="color:var(--text);">101</strong></div>
+          <div>👩 Women Helpline: <strong style="color:var(--text);">1091</strong></div>
+          <div>🧒 Child Helpline: <strong style="color:var(--text);">1098</strong></div>
+          <div>☎️ Health Helpline: <strong style="color:var(--text);">104</strong></div>
+        </div>
+      </div>
+      <div class="panel"><h3 style="font-size:16px;">📲 Set Emergency Contact</h3>
+        <div class="fgroup"><label class="flabel">Contact Name</label><input class="finput" id="emg-cname" placeholder="Family member name"></div>
+        <div class="fgroup"><label class="flabel">Phone Number</label><input class="finput" id="emg-cphone" placeholder="+91 XXXXX XXXXX"></div>
+        <button class="btn-primary btn-sm" onclick="saveEmergencyContact()">💾 Save Contact</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== FIRST AID HUB ======================== -->
+<section id="firstaid" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Emergency Learning Hub</div>
+    <h2 class="section-title">First Aid & Emergency Guides</h2>
+    <p class="section-sub">Multilingual guides with voice narration — works offline</p>
+  </div>
+  <div class="cards-grid slide-in" id="firstAidGrid"></div>
+  <div class="panel slide-in" id="firstAidDetail" style="margin-top:24px;max-width:800px;margin-left:auto;margin-right:auto;display:none;"></div>
+</section>
+
+<!-- ======================== CHECKUPS ======================== -->
+<section id="checkup" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Digital Health Monitor</div>
+    <h2 class="section-title">Basic Health Checkups</h2>
+    <p class="section-sub">AI-powered health monitoring algorithms</p>
+  </div>
+  <div class="cards-grid slide-in" id="checkupGrid"></div>
+  <div class="panel slide-in" style="margin-top:24px;max-width:700px;margin-left:auto;margin-right:auto;">
+    <h3>🩺 Quick Health Check</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="fgroup"><label class="flabel">Systolic BP (mmHg)</label><input class="finput" id="ck-sys" type="number" placeholder="e.g. 120"></div>
+      <div class="fgroup"><label class="flabel">Diastolic BP (mmHg)</label><input class="finput" id="ck-dia" type="number" placeholder="e.g. 80"></div>
+      <div class="fgroup"><label class="flabel">Heart Rate (bpm)</label><input class="finput" id="ck-hr" type="number" placeholder="e.g. 72"></div>
+      <div class="fgroup"><label class="flabel">Blood Sugar (mg/dL)</label><input class="finput" id="ck-sugar" type="number" placeholder="e.g. 100"></div>
+      <div class="fgroup"><label class="flabel">Temperature (°F)</label><input class="finput" id="ck-temp" type="number" placeholder="e.g. 98.6"></div>
+      <div class="fgroup"><label class="flabel">Oxygen Saturation (%)</label><input class="finput" id="ck-spo2" type="number" placeholder="e.g. 98"></div>
+    </div>
+    <button class="btn-primary" onclick="analyzeCheckup()" style="width:100%;">📊 Analyze Health Metrics</button>
+    <div id="checkupResult" style="margin-top:18px;"></div>
+  </div>
+</section>
+
+<!-- ======================== RETINAL HEALTH ======================== -->
+<section id="retinal" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Vision Health</div>
+    <h2 class="section-title">Retinal Health Analyzer</h2>
+    <p class="section-sub">Enter your vision values for personalized eye care recommendations</p>
+  </div>
+  <div style="max-width:800px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>👁️ Vision Assessment</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="fgroup"><label class="flabel">Right Eye Power (Sphere)</label><input class="finput" id="ret-rsp" placeholder="e.g. -2.50"></div>
+        <div class="fgroup"><label class="flabel">Left Eye Power (Sphere)</label><input class="finput" id="ret-lsp" placeholder="e.g. -1.75"></div>
+        <div class="fgroup"><label class="flabel">Right Cylinder</label><input class="finput" id="ret-rcyl" placeholder="e.g. -0.75"></div>
+        <div class="fgroup"><label class="flabel">Left Cylinder</label><input class="finput" id="ret-lcyl" placeholder="e.g. -0.50"></div>
+        <div class="fgroup"><label class="flabel">Daily Screen Time (hours)</label><input class="finput" id="ret-screen" type="number" placeholder="e.g. 8"></div>
+        <div class="fgroup"><label class="flabel">Age</label><input class="finput" id="ret-age" type="number" placeholder="Your age"></div>
+      </div>
+      <button class="btn-primary" onclick="analyzeRetinal()" style="width:100%;">👁️ Analyze Vision Health</button>
+    </div>
+    <div id="retinalResult" style="margin-top:20px;"></div>
+  </div>
+</section>
+
+<!-- ======================== BABY CARE ======================== -->
+<section id="baby" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Infant Health</div>
+    <h2 class="section-title">Baby Care Center</h2>
+    <p class="section-sub">Complete guide for infant feeding, milestones, vaccinations & care</p>
+  </div>
+  <div class="slide-in">
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px;justify-content:center;">
+      <button class="chip sel" onclick="filterBaby('all',this)">All</button>
+      <button class="chip" onclick="filterBaby('feeding',this)">Feeding</button>
+      <button class="chip" onclick="filterBaby('vaccine',this)">Vaccines</button>
+      <button class="chip" onclick="filterBaby('milestone',this)">Milestones</button>
+      <button class="chip" onclick="filterBaby('illness',this)">Illness Signs</button>
+    </div>
+    <div class="cards-grid" id="babyGrid"></div>
+  </div>
+</section>
+
+<!-- ======================== ASHA WORKER PORTAL ======================== -->
+<section id="asha" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Frontline Health Workers</div>
+    <h2 class="section-title">ASHA / ANM Worker Portal</h2>
+    <p class="section-sub">Voice data entry, offline sync, automated reports for field workers</p>
+  </div>
+  <div style="max-width:900px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>📋 Field Data Entry (Voice or Text)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fgroup"><label class="flabel">Patient Name</label><input class="finput" id="asha-name" placeholder="Patient's name"></div>
+        <div class="fgroup"><label class="flabel">Village</label><input class="finput" id="asha-village" placeholder="Village/Panchayat"></div>
+        <div class="fgroup"><label class="flabel">Visit Type</label>
+          <select class="fselect" id="asha-visit"><option>Ante-Natal Care</option><option>Post-Natal Care</option><option>Immunization</option><option>Nutrition Survey</option><option>General Check</option></select>
+        </div>
+        <div class="fgroup"><label class="flabel">Condition</label><select class="fselect" id="asha-cond"><option>Healthy</option><option>Mild Concern</option><option>Needs Referral</option><option>Emergency</option></select></div>
+      </div>
+      <div class="fgroup"><label class="flabel">Notes (or use voice)</label><textarea class="ftextarea" id="asha-notes" placeholder="Observations, measurements, follow-up needed..."></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-primary" onclick="submitAshaReport()" style="flex:1;">📤 Submit Report</button>
+        <button class="voice-btn" onclick="startAshaVoice()">🎤</button>
+      </div>
+    </div>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin:20px 0 12px;">Recent Field Reports</h3>
+    <div id="ashaReports">
+      <div class="asha-card"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:600;">Lakshmi Devi, Village: Kothagudem</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">ANC Visit · 24 Feb 2026</div></div><span class="status-dot status-online"></span></div><div style="font-size:12px;color:var(--success);margin-top:8px;">✓ Synced | Healthy · 32 weeks pregnancy</div></div>
+      <div class="asha-card" style="margin-top:10px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:600;">Ravi Kumar, Village: Palvoncha</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">Immunization · 23 Feb 2026</div></div><span class="status-dot status-online"></span></div><div style="font-size:12px;color:var(--warn);margin-top:8px;">⚠ Pending sync | BCG, OPV scheduled</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== PUBLIC HEALTH DASHBOARD ======================== -->
+<section id="phd" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Real-Time Public Health Data</div>
+    <h2 class="section-title">Public Health Dashboard</h2>
+    <p class="section-sub">Disease hotspots, outbreak trends from WHO & Govt open data</p>
+  </div>
+  <div class="slide-in" style="max-width:1100px;margin:0 auto;">
+    <div class="phd-grid">
+      <div class="phd-card"><h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;color:var(--danger);margin-bottom:14px;">🦠 Active Disease Alerts</h3>
+        <div class="hotspot-item"><div style="font-size:20px;">🦟</div><div><div style="font-weight:600;font-size:14px;">Dengue — Andhra Pradesh</div><div style="font-size:12px;color:var(--warn);">↑ 23% increase · High Alert</div></div></div>
+        <div class="hotspot-item"><div style="font-size:20px;">💉</div><div><div style="font-weight:600;font-size:14px;">Cholera — Bihar (3 districts)</div><div style="font-size:12px;color:var(--danger);">⚠ Outbreak · 156 cases</div></div></div>
+        <div class="hotspot-item"><div style="font-size:20px;">🤧</div><div><div style="font-weight:600;font-size:14px;">H1N1 — Maharashtra</div><div style="font-size:12px;color:var(--warn);">Watch · Seasonal Rise</div></div></div>
+        <div class="hotspot-item"><div style="font-size:20px;">🦠</div><div><div style="font-weight:600;font-size:14px;">Malaria — Odisha</div><div style="font-size:12px;color:var(--success);">↓ 12% decline · Improving</div></div></div>
+      </div>
+      <div class="phd-card"><h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;color:var(--saffron);margin-bottom:14px;">📊 National Health Stats</h3>
+        <div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>Vaccination Coverage (India)</span><span style="color:var(--saffron);font-weight:700;">89%</span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:89%;"></div></div></div>
+        <div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>Antenatal Care Access</span><span style="color:var(--india-green);font-weight:700;">72%</span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:72%;background:linear-gradient(90deg,var(--india-green),#0d6b06);"></div></div></div>
+        <div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>Malnutrition (Under-5)</span><span style="color:var(--danger);font-weight:700;">36%</span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:36%;background:linear-gradient(90deg,var(--danger),#991b1b);"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>Rural Hospital Access</span><span style="color:var(--warn);font-weight:700;">61%</span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:61%;background:linear-gradient(90deg,var(--warn),#92400e);"></div></div></div>
+      </div>
+      <div class="phd-card"><h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;color:var(--accent3);margin-bottom:14px;">🏥 Healthcare Infrastructure</h3>
+        <div class="hotspot-item"><div style="font-size:20px;">🏥</div><div><div style="font-weight:600;font-size:14px;">PHCs Active</div><div style="font-size:12px;color:var(--muted);">25,743 Primary Health Centres</div></div></div>
+        <div class="hotspot-item"><div style="font-size:20px;">👩‍⚕️</div><div><div style="font-weight:600;font-size:14px;">ASHA Workers</div><div style="font-size:12px;color:var(--muted);">10.4 Lakh deployed nationally</div></div></div>
+        <div class="hotspot-item"><div style="font-size:20px;">💉</div><div><div style="font-weight:600;font-size:14px;">Vaccines Distributed</div><div style="font-size:12px;color:var(--success);">2.2 Billion doses (2025)</div></div></div>
+        <div class="hotspot-item"><div style="font-size:20px;">📱</div><div><div style="font-weight:600;font-size:14px;">Digital Health IDs</div><div style="font-size:12px;color:var(--success);">54 Crore ABHA created</div></div></div>
+      </div>
+      <div class="phd-card"><h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;color:var(--success);margin-bottom:14px;">🌡️ Seasonal Health Forecast</h3>
+        <div style="font-size:13px;line-height:2;color:var(--muted);">
+          <div>🌧️ <strong style="color:var(--text);">Pre-Monsoon:</strong> Dengue, Typhoid risk HIGH</div>
+          <div>☀️ <strong style="color:var(--text);">Summer:</strong> Heat stroke, dehydration alerts</div>
+          <div>🌨️ <strong style="color:var(--text);">Winter:</strong> Respiratory infections, flu season</div>
+          <div>🍂 <strong style="color:var(--text);">Post-Monsoon:</strong> Malaria, waterborne diseases</div>
+          <div style="margin-top:10px;padding:10px;background:rgba(239,68,68,.08);border-radius:8px;border:1px solid rgba(239,68,68,.15);">⚠️ <strong>Current Alert:</strong> Dengue season active in southern states</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== PRESCRIPTION ======================== -->
+<section id="prescription" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Digital Prescription</div>
+    <h2 class="section-title">Prescriptions & Reports</h2>
+    <p class="section-sub">Access and download your prescriptions and health reports</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;margin:0 auto;" class="slide-in">
+    <div class="panel">
+      <h3>📄 Get Prescription</h3>
+      <div class="fgroup"><label class="flabel">Patient Name</label><input class="finput" id="presc-name" placeholder="Your name"></div>
+      <div class="fgroup"><label class="flabel">Phone</label><input class="finput" id="presc-phone" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="fgroup"><label class="flabel">Date of Visit</label><input class="finput" id="presc-date" type="date"></div>
+      <button class="btn-primary" onclick="downloadPrescription()" style="width:100%;">📥 Download Prescription</button>
+      <div class="auth-divider">Upload New Reports</div>
+      <input type="file" accept=".pdf,.jpg,.png" multiple class="finput" style="cursor:pointer;" onchange="uploadReports(this)">
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;">Reports sent to your doctor's dashboard.</div>
+    </div>
+    <div class="panel">
+      <h3>📋 Recent Prescriptions</h3>
+      <div class="rx-item"><div style="font-size:20px;">📄</div><div style="flex:1;"><div style="font-weight:600;font-size:14px;">Dr. Sharma — General Checkup</div><div style="font-size:12px;color:var(--muted);">15 Feb 2026 · 3 medicines</div></div><button class="btn-primary btn-sm">Download</button></div>
+      <div class="rx-item"><div style="font-size:20px;">📄</div><div style="flex:1;"><div style="font-weight:600;font-size:14px;">Dr. Priya — Cardiology</div><div style="font-size:12px;color:var(--muted);">10 Feb 2026 · 2 medicines</div></div><button class="btn-primary btn-sm">Download</button></div>
+      <div class="rx-item"><div style="font-size:20px;">🩺</div><div style="flex:1;"><div style="font-weight:600;font-size:14px;">Lab Reports — Blood Panel</div><div style="font-size:12px;color:var(--muted);">8 Feb 2026 · Hb, Sugar, Thyroid</div></div><button class="btn-blue btn-sm">View</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== QR SCANNER ======================== -->
+<section id="qr" class="page">
+  <div class="section-header slide-in">
+    <div class="section-tag">Digital Identity</div>
+    <h2 class="section-title">QR Health Card</h2>
+    <p class="section-sub">Your health identity — scan to access records anywhere</p>
+  </div>
+  <div style="max-width:500px;margin:0 auto;" class="slide-in">
+    <div class="panel" style="text-align:center;">
+      <div id="qrDisplay" style="font-size:100px;margin:20px 0;filter:drop-shadow(0 0 20px rgba(255,153,51,.4));">⬛</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Your health QR code for quick hospital registration</p>
+      <button class="btn-primary" onclick="generateQR()" style="margin-right:10px;">🔄 Generate QR</button>
+      <button class="btn-outline" onclick="downloadQR()">📥 Download</button>
+    </div>
+  </div>
+</section>
+
+</div><!-- end #app -->
+
+<!-- CONTACT BAR -->
+<div class="contact-bar">
+  <span>📞 Contact: <a href="#">Chandana</a> | chandana@gmail.com</span>
+  <span>·</span>
+  <span class="team">⚡ Invented by WebQuad Team</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl" style="display:none;"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ===================================================================
+//  SWAASTHYA.AI — Complete Application Logic
+// ===================================================================
+
+// DATABASE (localStorage-based, simulating real-time DB)
+const DB = {
+  get: (key) => { try { return JSON.parse(localStorage.getItem('sw_'+key)); } catch(e){ return null; }},
+  set: (key, val) => { localStorage.setItem('sw_'+key, JSON.stringify(val)); },
+  del: (key) => { localStorage.removeItem('sw_'+key); }
+};
+
+// CURRENT USER STATE
+let currentUser = null;
+let chatLang = 'en';
+let selectedSpec = 'General Medicine';
+let voiceConsented = false;
+let recognition = null;
+let mapInstance = null;
+let userLat = null, userLng = null;
+
+// ===== CURSOR =====
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+  setTimeout(() => { ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px'; }, 60);
+});
+
+// ===== INIT =====
+window.onload = () => {
+  const saved = DB.get('currentUser');
+  if (saved) {
+    currentUser = saved;
+    showApp();
+  } else {
+    document.getElementById('auth').classList.add('active');
+  }
+  initRecipes();
+  initSessions();
+  initTips();
+  initCheckups();
+  initFirstAid();
+  initBabyCare();
+  animateCounters();
+};
+
+// ===== AUTH =====
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tab === 'login' ? 'loginForm' : 'registerForm').classList.add('active');
+}
+
+function doLogin() {
+  const id = document.getElementById('login-id').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!id || !pass) { showToast('❌ Please enter your credentials'); return; }
+  
+  const users = DB.get('users') || [];
+  const user = users.find(u => (u.phone === id || u.email === id) && u.password === btoa(pass));
+  if (user) {
+    currentUser = user;
+    DB.set('currentUser', user);
+    showApp();
+    showToast('✅ Welcome back, ' + user.name + '!');
+  } else {
+    showToast('❌ Invalid credentials. Try Demo Login.');
+  }
+}
+
+function demoLogin() {
+  const demoUser = {
+    id: 'demo_001', name: 'Priya Sharma', age: 28, gender: 'Female',
+    phone: '+91 98765 43210', email: 'priya@demo.com', occupation: 'Teacher',
+    location: 'Hyderabad, Telangana', bloodGroup: 'B+', conditions: 'None',
+    emergencyContact: '+91 99887 76655', reports: [], appointments: [],
+    sessions: [], reminders: [], password: btoa('demo123')
+  };
+  currentUser = demoUser;
+  DB.set('currentUser', demoUser);
+  const users = DB.get('users') || [];
+  if (!users.find(u => u.id === 'demo_001')) { users.push(demoUser); DB.set('users', users); }
+  showApp();
+  showToast('🎉 Demo mode activated! Explore SWAASTHYA.AI');
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const age = document.getElementById('reg-age').value;
+  const phone = document.getElementById('reg-phone').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  if (!name || !age || !phone || !pass) { showToast('❌ Please fill all required fields (*)'); return; }
+  
+  const users = DB.get('users') || [];
+  if (users.find(u => u.phone === phone)) { showToast('⚠️ Phone already registered. Please login.'); return; }
+  
+  const newUser = {
+    id: 'user_' + Date.now(),
+    name, age: parseInt(age),
+    gender: document.getElementById('reg-gender').value,
+    bloodGroup: document.getElementById('reg-blood').value,
+    phone, email: document.getElementById('reg-email').value,
+    occupation: document.getElementById('reg-occ').value,
+    location: document.getElementById('reg-loc').value,
+    emergencyContact: document.getElementById('reg-emg').value,
+    conditions: document.getElementById('reg-conditions').value,
+    password: btoa(pass),
+    reports: [], appointments: [], sessions: [], reminders: [],
+    createdAt: new Date().toISOString()
+  };
+  users.push(newUser);
+  DB.set('users', users);
+  currentUser = newUser;
+  DB.set('currentUser', newUser);
+  showApp();
+  showToast('🎉 Welcome to SWAASTHYA.AI, ' + name + '!');
+}
+
+function showApp() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('mainNav').style.display = 'flex';
+  goto('home');
+  updateDashboard();
+  initChatBot();
+}
+
+function logout() {
+  DB.del('currentUser');
+  currentUser = null;
+  document.getElementById('mainNav').style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('auth').classList.add('active');
+  showToast('👋 Logged out successfully');
+}
+
+// ===== NAVIGATION =====
+function goto(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(page);
+  if (el) { el.classList.add('active'); el.scrollTop = 0; }
+  document.querySelectorAll('.nav-btn').forEach(b => { if (b.textContent.toLowerCase().includes(page.toLowerCase().substring(0,4))) b.classList.add('active'); });
+  document.getElementById('menuDrop').classList.remove('open');
+  if (page === 'map') setTimeout(initMap, 200);
+  window.scrollTo(0, 0);
+}
+
+function toggleMenu() { document.getElementById('menuDrop').classList.toggle('open'); }
+window.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) document.getElementById('menuDrop').classList.remove('open'); });
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+}
+
+// ===== LANGUAGE =====
+const LANG_STRINGS = {
+  en: { heroSub: 'From AI-powered triage to home medicine delivery, from doctor consultations to baby care — SWAASTHYA.AI is your complete health ecosystem, available 24/7 in your language.', chatPlaceholder: 'Ask about symptoms, diet, medicines...', greeting: 'Hello! I am SWAASTHYA CareBot. How can I assist your health today? Please describe your symptoms or ask any health question.', disclaimer: 'General health education only. For emergencies call 108.' },
+  hi: { heroSub: 'AI-संचालित ट्राइज से लेकर दवा डिलीवरी तक — SWAASTHYA.AI आपका पूर्ण स्वास्थ्य पारिस्थितिकी तंत्र है, 24/7 आपकी भाषा में उपलब्ध।', chatPlaceholder: 'लक्षण, आहार, दवाओं के बारे में पूछें...', greeting: 'नमस्ते! मैं स्वास्थ्य केयरबॉट हूं। आज आपकी स्वास्थ्य में कैसे सहायता करूं?', disclaimer: 'केवल सामान्य स्वास्थ्य शिक्षा। आपातकाल में 108 पर कॉल करें।' },
+  ta: { heroSub: 'AI-இயக்கப்படும் ட்ரியாஜ் முதல் மருந்து டெலிவரி வரை — SWAASTHYA.AI உங்கள் முழு சுகாதார அமைப்பு, 24/7 உங்கள் மொழியில்.', chatPlaceholder: 'அறிகுறிகள், உணவு, மருந்துகளைப் பற்றி கேளுங்கள்...', greeting: 'வணக்கம்! நான் SWAASTHYA CareBot. இன்று உங்கள் ஆரோக்கியத்திற்கு எப்படி உதவலாம்?', disclaimer: 'பொது சுகாதார கல்வி மட்டுமே. அவசரநிலையில் 108 அழைக்கவும்.' },
+  te: { heroSub: 'AI-ఆధారిత ట్రియాజ్ నుండి మందుల డెలివరీ వరకు — SWAASTHYA.AI మీ పూర్తి ఆరోగ్య వ్యవస్థ, 24/7 మీ భాషలో అందుబాటులో.', chatPlaceholder: 'లక్షణాలు, ఆహారం, మందుల గురించి అడగండి...', greeting: 'నమస్కారం! నేను SWAASTHYA CareBot. ఈరోజు మీ ఆరోగ్యానికి ఎలా సహాయపడగలను?', disclaimer: 'సాధారణ ఆరోగ్య విద్య మాత్రమే. అత్యవసరానికి 108 కి కాల్ చేయండి.' },
+  bn: { heroSub: 'AI-চালিত ট্রায়াজ থেকে ওষুধ ডেলিভারি পর্যন্ত — SWAASTHYA.AI আপনার সম্পূর্ণ স্বাস্থ্য ইকোসিস্টেম, ২৪/৭ আপনার ভাষায়।', chatPlaceholder: 'লক্ষণ, খাদ্য, ওষুধ সম্পর্কে জিজ্ঞাসা করুন...', greeting: 'নমস্কার! আমি SWAASTHYA CareBot। আজ আপনার স্বাস্থ্যে কীভাবে সাহায্য করতে পারি?', disclaimer: 'শুধুমাত্র সাধারণ স্বাস্থ্য শিক্ষা। জরুরি অবস্থায় ১০৮ কল করুন।' },
+  kn: { heroSub: 'AI-ಆಧಾರಿತ ಟ್ರಯಾಜ್‌ನಿಂದ ಔಷಧ ವಿತರಣೆಯವರೆಗೆ — SWAASTHYA.AI ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಆರೋಗ್ಯ ಪರಿಸರ ವ್ಯವಸ್ಥೆ, ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ 24/7.', chatPlaceholder: 'ಲಕ್ಷಣಗಳು, ಆಹಾರ, ಔಷಧಿಗಳ ಬಗ್ಗೆ ಕೇಳಿ...', greeting: 'ನಮಸ್ಕಾರ! ನಾನು SWAASTHYA CareBot. ಇಂದು ನಿಮ್ಮ ಆರೋಗ್ಯಕ್ಕೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?', disclaimer: 'ಸಾಮಾನ್ಯ ಆರೋಗ್ಯ ಶಿಕ್ಷಣ ಮಾತ್ರ. ತುರ್ತು ಪರಿಸ್ಥಿತಿಯಲ್ಲಿ 108 ಕರೆ ಮಾಡಿ.' }
+};
+
+function setLang(lang) {
+  const strings = LANG_STRINGS[lang] || LANG_STRINGS.en;
+  const sub = document.getElementById('heroSub');
+  if (sub) sub.textContent = strings.heroSub;
+  const inp = document.getElementById('chatInput');
+  if (inp) inp.placeholder = strings.chatPlaceholder;
+  chatLang = lang;
+  showToast('🌐 Language changed');
+}
+
+function setChatLang(lang, btn) {
+  document.querySelectorAll('#chatLangPills .chip, .chat-container .chip').forEach(c => {
+    if (['English','हिन्दी','தமிழ்','తెలుగు','বাংলা','ಕನ್ನಡ'].includes(c.textContent)) c.classList.remove('sel');
+  });
+  btn.classList.add('sel');
+  chatLang = lang;
+  setLang(lang);
+}
+
+// ===== DASHBOARD =====
+function updateDashboard() {
+  if (!currentUser) return;
+  const u = currentUser;
+  document.getElementById('dashName').textContent = u.name.split(' ')[0];
+  document.getElementById('dashFullName').textContent = u.name;
+  document.getElementById('dashMetaLine').textContent = `${u.age} yrs · ${u.gender} · ${u.bloodGroup} · ${u.location || 'Location not set'}`;
+  
+  const badges = document.getElementById('dashBadges');
+  badges.innerHTML = [
+    `<span class="profile-badge">📞 ${u.phone}</span>`,
+    u.occupation ? `<span class="profile-badge">💼 ${u.occupation}</span>` : '',
+    `<span class="profile-badge">🩸 ${u.bloodGroup}</span>`,
+    u.conditions && u.conditions !== 'None' ? `<span class="profile-badge" style="color:var(--warn);border-color:rgba(245,158,11,.3);">⚕️ ${u.conditions.substring(0,20)}...</span>` : ''
+  ].join('');
+  
+  const score = 70 + Math.floor(Math.random() * 25);
+  document.getElementById('healthScore').textContent = score + '/100';
+  
+  const appts = u.appointments || [];
+  const sessions = u.sessions || [];
+  const reports = u.reports || [];
+  const reminders = u.reminders || [];
+  
+  document.getElementById('kpi-appt').textContent = appts.length;
+  document.getElementById('kpi-sessions').textContent = sessions.length;
+  document.getElementById('kpi-reports').textContent = reports.length;
+  document.getElementById('kpi-reminders').textContent = reminders.length;
+  
+  // Appointments list
+  const apptEl = document.getElementById('dashApptList');
+  if (appts.length > 0) {
+    apptEl.innerHTML = appts.slice(-3).reverse().map(a => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-weight:600;font-size:13px;">${a.specialty}</div><div style="font-size:11px;color:var(--muted);">${a.date} · ${a.slot}</div></div>
+        <span style="font-size:11px;background:rgba(255,153,51,.1);color:var(--saffron);padding:3px 10px;border-radius:100px;border:1px solid rgba(255,153,51,.2);">Confirmed</span>
+      </div>`).join('');
+  }
+  
+  // Sessions
+  const sessEl = document.getElementById('dashSessionsList');
+  if (sessions.length > 0) {
+    sessEl.innerHTML = sessions.slice(-3).reverse().map(s => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="font-weight:600;font-size:13px;">${s.name}</div>
+        <div style="font-size:11px;color:var(--muted);">${s.date} · ${s.doctor}</div>
+      </div>`).join('');
+  }
+  
+  // Reports
+  const repEl = document.getElementById('dashReportList');
+  if (reports.length > 0) {
+    repEl.innerHTML = reports.slice(-4).map(r => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;">
+        <span style="font-size:18px;">📄</span>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${r.name}</div><div style="font-size:11px;color:var(--muted);">${r.date}</div></div>
+      </div>`).join('');
+  }
+  
+  // Reminders
+  const remEl = document.getElementById('dashReminderList');
+  if (reminders.length > 0) {
+    remEl.innerHTML = reminders.slice(-4).map(r => `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;">
+        <span style="font-size:18px;">⏰</span>
+        <div><div style="font-size:13px;font-weight:600;">${r.name}</div><div style="font-size:11px;color:var(--muted);">${r.time} · ${r.freq}</div></div>
+      </div>`).join('');
+  }
+}
+
+// ===== PROFILE EDIT =====
+function openEditProfile() {
+  if (!currentUser) return;
+  const u = currentUser;
+  document.getElementById('ep-name').value = u.name || '';
+  document.getElementById('ep-age').value = u.age || '';
+  document.getElementById('ep-phone').value = u.phone || '';
+  document.getElementById('ep-email').value = u.email || '';
+  document.getElementById('ep-occ').value = u.occupation || '';
+  document.getElementById('ep-blood').value = u.bloodGroup || 'B+';
+  document.getElementById('ep-loc').value = u.location || '';
+  document.getElementById('ep-emergency').value = u.emergencyContact || '';
+  document.getElementById('ep-conditions').value = u.conditions || '';
+  document.getElementById('editProfileModal').classList.add('open');
+  document.getElementById('menuDrop').classList.remove('open');
+}
+
+function closeEditProfile() { document.getElementById('editProfileModal').classList.remove('open'); }
+
+function saveProfile() {
+  if (!currentUser) return;
+  currentUser.name = document.getElementById('ep-name').value;
+  currentUser.age = parseInt(document.getElementById('ep-age').value);
+  currentUser.phone = document.getElementById('ep-phone').value;
+  currentUser.email = document.getElementById('ep-email').value;
+  currentUser.occupation = document.getElementById('ep-occ').value;
+  currentUser.bloodGroup = document.getElementById('ep-blood').value;
+  currentUser.location = document.getElementById('ep-loc').value;
+  currentUser.emergencyContact = document.getElementById('ep-emergency').value;
+  currentUser.conditions = document.getElementById('ep-conditions').value;
+  DB.set('currentUser', currentUser);
+  const users = DB.get('users') || [];
+  const idx = users.findIndex(u => u.id === currentUser.id);
+  if (idx >= 0) { users[idx] = currentUser; DB.set('users', users); }
+  closeEditProfile();
+  updateDashboard();
+  showToast('✅ Profile updated successfully!');
+}
+
+// ===== AI CHATBOT =====
+function initChatBot() {
+  const win = document.getElementById('chatWindow');
+  if (!win) return;
+  win.innerHTML = '';
+  const greeting = LANG_STRINGS[chatLang]?.greeting || LANG_STRINGS.en.greeting;
+  addMsg('bot', greeting);
+}
+
+function addMsg(role, text) {
+  const win = document.getElementById('chatWindow');
+  if (!win) return;
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `<div class="msg-avatar">${role === 'bot' ? '⚕' : '👤'}</div><div class="msg-bubble">${text}</div>`;
+  win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+}
+
+function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  addMsg('user', msg);
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const reply = generateAIReply(msg, chatLang);
+    addMsg('bot', reply);
+  }, 1200 + Math.random() * 800);
+}
+
+function quickChat(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendChat();
+  goto('chat');
+}
+
+function showTyping() {
+  const win = document.getElementById('chatWindow');
+  const t = document.createElement('div');
+  t.className = 'msg bot'; t.id = 'typingIndicator';
+  t.innerHTML = '<div class="msg-avatar">⚕</div><div class="msg-bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  win.appendChild(t); win.scrollTop = win.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function generateAIReply(msg, lang) {
+  const m = msg.toLowerCase();
+  const responses = {
+    en: {
+      fever: '🌡️ <b>Fever Management:</b><br>• Rest and hydrate well (2–3 liters water/day)<br>• Take Paracetamol (500mg) every 6 hours if >38.5°C<br>• Apply cool wet cloth on forehead<br>• Seek care if fever exceeds 40°C, persists >3 days, or if child under 5<br><br>⚠️ Dengue/Malaria season — if fever with rash, joint pain, or chills, visit clinic immediately.',
+      dengue: '🦟 <b>Dengue Fever Signs:</b><br>• High fever (40°C+), severe headache behind eyes<br>• Muscle & joint pain ("breakbone fever")<br>• Skin rash, mild bleeding from nose/gums<br>• Nausea, fatigue<br><br><b>Action:</b> Get CBC test immediately. Avoid aspirin/ibuprofen. Only Paracetamol for fever. Seek hospital if platelet count drops below 100,000.',
+      diabetes: '🩸 <b>Diabetes Diet Plan:</b><br><b>Eat more:</b> Vegetables (bitter gourd, fenugreek), whole grains, legumes, fruits in moderation (guava, berries)<br><b>Avoid:</b> White rice (limit), refined flour, sweets, soft drinks, fried foods<br><br><b>Tips:</b> Eat every 3 hours in small portions. Walk 30 min daily. Monitor fasting sugar (target 80-130 mg/dL). Take medication regularly.',
+      bp: '💓 <b>Blood Pressure Control:</b><br>• Reduce salt (<5g/day), avoid processed food<br>• Exercise 30 min/day (walking, yoga)<br>• Quit smoking & reduce alcohol<br>• Eat potassium-rich foods (banana, spinach, tomato)<br>• Take medications as prescribed — never skip<br>• Monitor BP at home twice daily',
+      diet: '🥗 <b>Balanced Indian Diet Plan:</b><br><b>Morning:</b> Sprouts, eggs or idli with sambar<br><b>Lunch:</b> 2 chapati, dal, sabzi, curd, salad<br><b>Snack:</b> Fruits, nuts, buttermilk<br><b>Dinner:</b> Light khichdi or soup with vegetables<br><br>Drink 8 glasses water. Include turmeric, ginger, garlic daily.',
+      vaccine: '💉 <b>India Immunization Schedule (0-5 years):</b><br>• Birth: BCG, OPV, Hepatitis B<br>• 6 weeks: DPT, OPV, Hepatitis B, Hib<br>• 10 weeks: DPT, OPV, Hib<br>• 14 weeks: DPT, OPV, Hib, IPV<br>• 9-12 months: Measles/MR, Vitamin A<br>• 16-24 months: DPT booster, OPV booster<br>• 5-6 years: DT booster<br><br>All vaccines are FREE at government health centers.',
+      malaria: '🦟 <b>Malaria:</b><br>• Symptoms: Cyclical fever, chills, sweating, headache, vomiting<br>• Diagnosis: Rapid malaria test (free at PHC)<br>• Treatment: Artemisinin combination therapy (ACT) — available at all PHCs<br>• Prevention: Mosquito nets, repellent, eliminate stagnant water',
+      default: `🤖 <b>SWAASTHYA CareBot Response:</b><br>Thank you for your health query about "${msg.substring(0,40)}..."<br><br>I recommend:<br>• Describe specific symptoms for better guidance<br>• Use the Triage section for symptom assessment<br>• Book an appointment with a specialist doctor<br>• For emergencies, call 108 immediately<br><br>Please consult a qualified doctor for diagnosis and treatment.`
+    },
+    hi: {
+      default: `🤖 आपके प्रश्न के लिए धन्यवाद। "${msg.substring(0,30)}..." के बारे में — कृपया किसी योग्य चिकित्सक से परामर्श करें। आपात स्थिति में 108 पर कॉल करें।`
+    },
+    te: {
+      default: `🤖 మీ ఆరోగ్య ప్రశ్నకు ధన్యవాదాలు. "${msg.substring(0,30)}..." గురించి — దయచేసి అర్హత గల వైద్యుని సంప్రదించండి. అత్యవసర పరిస్థితిలో 108 కు కాల్ చేయండి.`
+    }
+  };
+  
+  const langRes = responses[lang] || responses.en;
+  if (m.includes('fever') || m.includes('temperature') || m.includes('bukhar')) return langRes.fever || responses.en.fever;
+  if (m.includes('dengue')) return langRes.dengue || responses.en.dengue;
+  if (m.includes('diabetes') || m.includes('sugar') || m.includes('madhumeh')) return langRes.diabetes || responses.en.diabetes;
+  if (m.includes('blood pressure') || m.includes('bp') || m.includes('hypertension')) return langRes.bp || responses.en.bp;
+  if (m.includes('diet') || m.includes('food') || m.includes('weight') || m.includes('eat')) return langRes.diet || responses.en.diet;
+  if (m.includes('vaccine') || m.includes('vaccination') || m.includes('baby')) return langRes.vaccine || responses.en.vaccine;
+  if (m.includes('malaria')) return langRes.malaria || responses.en.malaria;
+  return langRes.default || responses.en.default;
+}
+
+function handleReportUpload(inp) {
+  if (inp.files.length > 0) {
+    addMsg('user', `📎 Uploaded: ${inp.files[0].name}`);
+    addMsg('bot', `✅ Report received! I'm analyzing "${inp.files[0].name}"...<br><br>Based on your upload, please describe your main symptoms so I can provide relevant guidance. For accurate diagnosis, always consult your doctor with the physical report.`);
+    if (currentUser) {
+      currentUser.reports = currentUser.reports || [];
+      currentUser.reports.push({ name: inp.files[0].name, date: new Date().toLocaleDateString() });
+      DB.set('currentUser', currentUser);
+      updateDashboard();
+    }
+  }
+}
+
+// ===== VOICE ASSISTANT =====
+function toggleVoice() {
+  if (!voiceConsented) { document.getElementById('voiceConsent').style.display = 'flex'; return; }
+  startVoiceRecognition();
+}
+
+function grantVoiceConsent() {
+  voiceConsented = true;
+  document.getElementById('voiceConsent').style.display = 'none';
+  startVoiceRecognition();
+}
+
+function startVoiceRecognition() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('❌ Voice not supported on this browser. Try Chrome.');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  const langMap = { en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-BD', kn: 'kn-IN' };
+  recognition.lang = langMap[chatLang] || 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  
+  const btn = document.getElementById('voiceBtn');
+  btn.classList.add('listening');
+  btn.textContent = '🔴';
+  
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('chatInput').value = transcript;
+    btn.classList.remove('listening');
+    btn.textContent = '🎤';
+    sendChat();
+  };
+  
+  recognition.onerror = () => { btn.classList.remove('listening'); btn.textContent = '🎤'; showToast('❌ Voice recognition failed. Try again.'); };
+  recognition.onend = () => { btn.classList.remove('listening'); btn.textContent = '🎤'; };
+  recognition.start();
+  showToast('🎤 Listening in ' + (chatLang.toUpperCase()) + '...');
+}
+
+function startTriageVoice() {
+  if (!voiceConsented) { document.getElementById('voiceConsent').style.display = 'flex'; return; }
+  if (!('webkitSpeechRecognition' in window)) { showToast('Voice not supported'); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const r = new SR(); r.lang = 'en-IN'; r.start();
+  r.onresult = (e) => { document.getElementById('t-desc').value = e.results[0][0].transcript; showToast('✅ Voice captured!'); };
+}
+
+function startAshaVoice() {
+  if (!voiceConsented) { document.getElementById('voiceConsent').style.display = 'flex'; return; }
+  if (!('webkitSpeechRecognition' in window)) { showToast('Voice not supported'); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const r = new SR(); r.lang = 'en-IN'; r.start();
+  r.onresult = (e) => { document.getElementById('asha-notes').value = e.results[0][0].transcript; showToast('✅ Voice data entered!'); };
+}
+
+// ===== TRIAGE =====
+function toggleChip(el) { el.classList.toggle('sel'); }
+
+function runTriage() {
+  const age = parseInt(document.getElementById('t-age').value) || 30;
+  const desc = document.getElementById('t-desc').value;
+  const chips = [...document.querySelectorAll('#symptomChips .chip.sel')].map(c => c.textContent.replace(/[🌡️🤕😮‍💨💔😤🤢🤮💩😴😵🦵🔴😶🤙🫀👁️]/g,'').trim());
+  
+  if (chips.length === 0 && !desc) { showToast('⚠️ Please select at least one symptom'); return; }
+  
+  // AI Risk Scoring
+  const highRiskSymptoms = ['Chest Pain', 'Breathlessness', 'Unconsciousness', 'Palpitations'];
+  const medRiskSymptoms = ['Fever', 'Diarrhea', 'Vomiting', 'Abdominal Pain', 'Dizziness'];
+  
+  let score = 20 + (chips.length * 8);
+  let isHigh = chips.some(c => highRiskSymptoms.some(h => c.includes(h.split(' ')[0])));
+  let isMed = chips.some(c => medRiskSymptoms.some(m => c.includes(m.split(' ')[0])));
+  
+  if (isHigh) score = Math.max(score, 80);
+  else if (isMed) score = Math.max(score, 50);
+  
+  // Age adjustments
+  if (age < 5 || age > 65) score = Math.min(score + 15, 95);
+  
+  let urgency, badge, findings, action;
+  if (score >= 70) {
+    urgency = 'HIGH';
+    badge = '<span class="urgency-high">🔴 HIGH RISK — Seek Immediate Medical Attention</span>';
+    findings = `<b>Symptoms indicating high risk:</b> ${chips.join(', ') || desc.substring(0,50)}<br><br>
+    ⚕️ <b>Recommended Action:</b> Visit nearest hospital emergency or call 108 immediately.<br><br>
+    🏥 Consider: Apollo Hospital, AIIMS, or nearest government hospital emergency ward.<br><br>
+    ⚠️ <b>Do NOT delay</b> — these symptoms require urgent professional evaluation.`;
+    action = '🚨 CALL AMBULANCE 108 NOW';
+  } else if (score >= 40) {
+    urgency = 'MEDIUM';
+    badge = '<span class="urgency-med">🟡 MODERATE — Visit Primary Health Center</span>';
+    findings = `<b>Symptoms detected:</b> ${chips.join(', ') || desc.substring(0,50)}<br><br>
+    ⚕️ <b>Recommended Action:</b> Visit nearest PHC or clinic within 24 hours.<br><br>
+    💊 Home care meanwhile: Rest, hydrate, Paracetamol if fever >38.5°C<br><br>
+    📞 Call health helpline: 104 for free teleconsultation.`;
+  } else {
+    urgency = 'LOW';
+    badge = '<span class="urgency-low">🟢 LOW RISK — Home Care Advised</span>';
+    findings = `<b>Symptoms:</b> ${chips.join(', ') || desc.substring(0,50)}<br><br>
+    ✅ <b>Home Care Tips:</b><br>
+    • Rest adequately (7-8 hours sleep)<br>
+    • Drink 2-3 liters of water daily<br>
+    • Eat light nutritious food<br>
+    • Monitor symptoms for 2-3 days<br><br>
+    If symptoms worsen or new symptoms develop, seek medical attention.`;
+  }
+  
+  document.getElementById('resultEmpty').style.display = 'none';
+  document.getElementById('resultContent').style.display = 'block';
+  document.getElementById('urgencyBadge').innerHTML = badge;
+  document.getElementById('riskScore').textContent = score + '%';
+  document.getElementById('riskBar').style.width = score + '%';
+  document.getElementById('riskBar').style.background = urgency === 'HIGH' ? 'linear-gradient(90deg,#dc2626,#7f1d1d)' : urgency === 'MEDIUM' ? 'linear-gradient(90deg,#f59e0b,#92400e)' : 'linear-gradient(90deg,var(--saffron),var(--india-green))';
+  document.getElementById('resultFindings').innerHTML = findings;
+  
+  showToast(`📊 Risk assessment complete: ${urgency} risk (${score}%)`);
+}
+
+// ===== APPOINTMENTS =====
+function selectSpec(el, name) {
+  document.querySelectorAll('.hosp-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected'); selectedSpec = name;
+}
+
+function bookAppt() {
+  const name = document.getElementById('a-name').value;
+  const phone = document.getElementById('a-phone').value;
+  const date = document.getElementById('a-date').value;
+  if (!name || !phone || !date) { showToast('⚠️ Please fill Name, Phone and Date'); return; }
+  
+  const appt = {
+    id: Date.now(), specialty: selectedSpec, name, phone, date,
+    slot: document.getElementById('a-slot').value,
+    notes: document.getElementById('a-notes').value,
+    bookedAt: new Date().toLocaleDateString()
+  };
+  
+  if (currentUser) {
+    currentUser.appointments = currentUser.appointments || [];
+    currentUser.appointments.push(appt);
+    DB.set('currentUser', currentUser);
+    updateDashboard();
+  }
+  
+  document.getElementById('apptConfirmation').style.display = 'block';
+  document.getElementById('apptConfirmation').innerHTML = `
+    <div class="panel" style="background:rgba(19,136,8,.08);border-color:rgba(19,136,8,.25);">
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:48px;margin-bottom:12px;">✅</div>
+        <h3 style="color:var(--india-green);">Appointment Confirmed!</h3>
+        <p style="color:var(--muted);font-size:13px;margin-top:8px;">${selectedSpec} · ${date} · ${document.getElementById('a-slot').value}</p>
+        <p style="font-size:13px;margin-top:8px;">Dr. will receive your reports and contact you at ${phone}</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:4px;">Appointment ID: SW-${Math.random().toString(36).substring(2,8).toUpperCase()}</p>
+      </div>
+    </div>`;
+  showToast('📅 Appointment booked successfully!');
+}
+
+// ===== BMI =====
+function calcBMI() {
+  const h = parseFloat(document.getElementById('bmi-height').value);
+  const w = parseFloat(document.getElementById('bmi-weight').value);
+  const name = document.getElementById('bmi-name').value || 'You';
+  if (!h || !w) { showToast('⚠️ Enter height and weight'); return; }
+  
+  const bmi = (w / ((h/100) ** 2)).toFixed(1);
+  let cat, color, dietTips, exerciseTips;
+  
+  if (bmi < 18.5) { cat = 'Underweight'; color = 'var(--warn)'; dietTips = 'Increase calorie intake: Add nuts, dairy, protein-rich foods, bananas, avocado. Eat 5-6 meals daily.'; exerciseTips = 'Strength training 3x/week. Avoid excessive cardio. Focus on muscle building.'; }
+  else if (bmi < 25) { cat = 'Normal Weight'; color = 'var(--success)'; dietTips = 'Maintain balanced diet: 40% carbs, 30% protein, 30% healthy fats. 5 servings fruits/vegetables daily.'; exerciseTips = 'Mix of cardio and strength: 150 min moderate exercise/week. Yoga for flexibility.'; }
+  else if (bmi < 30) { cat = 'Overweight'; color = 'var(--saffron)'; dietTips = 'Reduce portion sizes. Avoid fried foods, sweets. More vegetables, lean protein, fiber.'; exerciseTips = 'Brisk walking 45 min/day. Swimming, cycling. Yoga for stress management.'; }
+  else { cat = 'Obese'; color = 'var(--danger)'; dietTips = 'Consult dietitian. Reduce calories by 500/day. High fiber, protein-rich meals. Avoid refined carbs.'; exerciseTips = 'Start slow: 20 min walks, increase gradually. Low-impact exercises (swimming). Consult doctor.'; }
+  
+  document.getElementById('bmiEmpty').style.display = 'none';
+  document.getElementById('bmiContent').style.display = 'block';
+  document.getElementById('bmiContent').innerHTML = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <div class="bmi-val" style="color:${color};">${bmi}</div>
+      <div style="font-size:18px;font-weight:700;color:${color};margin-top:4px;">${cat}</div>
+      <div style="font-size:12px;color:var(--muted);">${name} · ${document.getElementById('bmi-age').value} yrs · ${document.getElementById('bmi-gender').value}</div>
+    </div>
+    <div style="background:var(--surface);border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:700;margin-bottom:8px;font-size:14px;">🥗 Diet Recommendations</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">${dietTips}</div>
+    </div>
+    <div style="background:var(--surface);border-radius:12px;padding:16px;">
+      <div style="font-weight:700;margin-bottom:8px;font-size:14px;">🏃 Exercise Plan</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">${exerciseTips}</div>
+    </div>`;
+  showToast(`📊 BMI: ${bmi} — ${cat}`);
+}
+
+// ===== MAP / HOSPITAL FINDER =====
+function initMap() {
+  if (mapInstance) return;
+  const lat = userLat || 17.3850, lng = userLng || 78.4867;
+  mapInstance = L.map('mapLeaflet').setView([lat, lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(mapInstance);
+  
+  // Add demo hospitals around user location
+  const hospitals = [
+    { name: 'Apollo Hospital', lat: lat + 0.01, lng: lng + 0.01, spec: 'Multi-specialty', dist: '1.2 km', emergency: true },
+    { name: 'AIIMS Primary Centre', lat: lat - 0.012, lng: lng + 0.008, spec: 'General', dist: '1.8 km', emergency: true },
+    { name: 'Community Health Centre', lat: lat + 0.005, lng: lng - 0.015, spec: 'PHC', dist: '0.9 km', emergency: false },
+    { name: 'Dental & ENT Clinic', lat: lat - 0.008, lng: lng - 0.01, spec: 'Dental/ENT', dist: '1.5 km', emergency: false }
+  ];
+  
+  const userMarker = L.circleMarker([lat, lng], { color: '#FF9933', fillColor: '#FF9933', fillOpacity: 1, radius: 8 }).addTo(mapInstance);
+  userMarker.bindPopup('<b>📍 Your Location</b>').openPopup();
+  
+  hospitals.forEach(h => {
+    const icon = L.divIcon({ html: `<div style="background:${h.emergency?'#dc2626':'#138808'};color:white;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3);">🏥 ${h.name}</div>`, className: '' });
+    L.marker([h.lat, h.lng], { icon }).addTo(mapInstance)
+      .bindPopup(`<b>${h.name}</b><br>${h.spec}<br>Distance: ${h.dist}<br>${h.emergency ? '🚨 Emergency Available' : '📋 OPD Only'}`);
+    L.polyline([[lat, lng], [h.lat, h.lng]], { color: '#FF9933', weight: 2, dashArray: '5,8', opacity: 0.7 }).addTo(mapInstance);
+  });
+  
+  showHospitalList(hospitals);
+}
+
+function getUserLocation() {
+  if (!navigator.geolocation) { showToast('❌ GPS not supported'); return; }
+  showToast('🛰️ Detecting your location...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+    document.getElementById('map-from').value = `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+    if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+    initMap();
+    showToast('📍 Location detected!');
+  }, () => showToast('❌ Location access denied. Enable GPS.'));
+}
+
+function getUserLocationEmergency() {
+  if (!navigator.geolocation) { showToast('❌ GPS not supported'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const el = document.getElementById('emergencyLocation');
+    el.innerHTML = `<div style="color:var(--success);font-weight:600;">📍 ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px;">Accuracy: ±${Math.round(pos.coords.accuracy)}m</div>
+    <button class="btn-green btn-sm" style="margin-top:10px;" onclick="window.open('https://wa.me/?text=🚨 EMERGENCY: My location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}')">📱 Share via WhatsApp</button>`;
+    showToast('📍 Location captured!');
+  }, () => showToast('❌ Please enable GPS'));
+}
+
+function findHospitals() {
+  const spec = document.getElementById('map-spec').value;
+  getUserLocation();
+  showToast(`🔍 Finding ${spec} hospitals near you...`);
+}
+
+function showHospitalList(hospitals) {
+  const el = document.getElementById('hospitalList');
+  el.innerHTML = '<h3 style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;">Nearest Hospitals</h3>' +
+    hospitals.map((h,i) => `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="font-size:28px;">🏥</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;">${h.name}</div>
+            <div style="font-size:12px;color:var(--muted);">${h.spec} · ${h.dist}</div>
+            <div style="font-size:11px;margin-top:3px;color:${h.emergency?'var(--danger)':'var(--success)'};">${h.emergency?'🚨 Emergency Available':'✅ OPD Available'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primary btn-sm" onclick="showToast('🗺️ Directions to ${h.name} opening...');window.open('https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}')">Get Directions</button>
+          <button class="btn-green btn-sm" onclick="goto('appt')">Book</button>
+        </div>
+      </div>`).join('');
+}
+
+// ===== EMERGENCY =====
+function callAmbulance() {
+  showToast('🚑 Calling 108 Ambulance...');
+  window.location.href = 'tel:108';
+}
+
+function callEmergencyContact() {
+  const contact = currentUser?.emergencyContact;
+  if (contact) { window.location.href = 'tel:' + contact; }
+  else { showToast('⚠️ No emergency contact set. Go to Settings > Profile.'); }
+}
+
+function callPolice() { window.location.href = 'tel:100'; }
+function callFireBrigade() { window.location.href = 'tel:101'; }
+
+function shareLocation() {
+  if (!navigator.geolocation) { showToast('❌ GPS not supported'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+    const msg = `🚨 EMERGENCY! I need help. My location: ${url}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Emergency Location', text: msg });
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    }
+    showToast('📍 Location shared!');
+  }, () => showToast('❌ Enable GPS to share location'));
+}
+
+function saveEmergencyContact() {
+  const name = document.getElementById('emg-cname').value;
+  const phone = document.getElementById('emg-cphone').value;
+  if (!name || !phone) { showToast('⚠️ Fill contact details'); return; }
+  if (currentUser) {
+    currentUser.emergencyContact = phone;
+    currentUser.emergencyContactName = name;
+    DB.set('currentUser', currentUser);
+    updateDashboard();
+  }
+  showToast('💾 Emergency contact saved: ' + name);
+}
+
+// ===== REMINDERS =====
+function addReminder() {
+  const name = document.getElementById('r-name').value;
+  const time = document.getElementById('r-time').value;
+  if (!name || !time) { showToast('⚠️ Fill reminder name and time'); return; }
+  
+  const reminder = {
+    id: Date.now(), name,
+    type: document.getElementById('r-type').value,
+    time, freq: document.getElementById('r-freq').value
+  };
+  
+  if (currentUser) {
+    currentUser.reminders = currentUser.reminders || [];
+    currentUser.reminders.push(reminder);
+    DB.set('currentUser', currentUser);
+    updateDashboard();
+  }
+  
+  const list = document.getElementById('reminderList');
+  const div = document.createElement('div');
+  div.className = 'reminder-item';
+  div.innerHTML = `<div style="font-size:22px;">⏰</div><div style="flex:1;"><div style="font-weight:600;">${name}</div><div style="font-size:12px;color:var(--muted);">${reminder.freq} · ${time}</div></div><span class="r-badge" style="background:rgba(255,153,51,.1);color:var(--saffron);border:1px solid rgba(255,153,51,.2);">Active</span>`;
+  list.insertBefore(div, list.firstChild);
+  
+  // Schedule browser notification
+  if ('Notification' in window) {
+    Notification.requestPermission().then(p => { if (p === 'granted') showToast('🔔 Notification permission granted!'); });
+  }
+  showToast('⏰ Reminder set for ' + name + ' at ' + time);
+}
+
+// ===== MEDICINE ORDER =====
+function orderMedicine() {
+  const name = document.getElementById('del-name').value;
+  const phone = document.getElementById('del-phone').value;
+  const addr = document.getElementById('del-addr').value;
+  const meds = document.getElementById('del-meds').value;
+  if (!name || !phone || !addr) { showToast('⚠️ Fill delivery details'); return; }
+  showToast('🚚 Order placed! Delivery in ~10 minutes. Order ID: SW-' + Math.random().toString(36).substring(2,8).toUpperCase());
+}
+
+// ===== PRESCRIPTION =====
+function downloadPrescription() {
+  const name = document.getElementById('presc-name').value;
+  if (!name) { showToast('⚠️ Enter patient name'); return; }
+  showToast('📥 Downloading prescription for ' + name + '...');
+}
+
+function uploadReports(inp) {
+  if (inp.files.length > 0 && currentUser) {
+    currentUser.reports = currentUser.reports || [];
+    Array.from(inp.files).forEach(f => currentUser.reports.push({ name: f.name, date: new Date().toLocaleDateString() }));
+    DB.set('currentUser', currentUser);
+    updateDashboard();
+    showToast(`✅ ${inp.files.length} report(s) uploaded successfully!`);
+  }
+}
+
+// ===== APPOINTMENTS =====
+function bookAppt() {
+  const name = document.getElementById('a-name').value || currentUser?.name;
+  const phone = document.getElementById('a-phone').value || currentUser?.phone;
+  const date = document.getElementById('a-date').value;
+  if (!date) { showToast('⚠️ Please select a date'); return; }
+  
+  const appt = { id: Date.now(), specialty: selectedSpec, name: name || 'Patient', phone: phone || '+91 XXXXX', date, slot: document.getElementById('a-slot').value, notes: document.getElementById('a-notes').value };
+  
+  if (currentUser) {
+    currentUser.appointments = currentUser.appointments || [];
+    currentUser.appointments.push(appt);
+    DB.set('currentUser', currentUser);
+    updateDashboard();
+  }
+  
+  document.getElementById('apptConfirmation').style.display = 'block';
+  document.getElementById('apptConfirmation').innerHTML = `
+    <div class="panel" style="background:rgba(19,136,8,.08);border-color:rgba(19,136,8,.3);text-align:center;">
+      <div style="font-size:48px;">✅</div>
+      <h3 style="color:var(--india-green);margin-top:12px;">Appointment Confirmed!</h3>
+      <p style="color:var(--muted);font-size:13px;margin-top:8px;"><b>${selectedSpec}</b> · ${date} · ${appt.slot}</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px;">Confirmation ID: SW-${Math.random().toString(36).substring(2,8).toUpperCase()}</p>
+    </div>`;
+  showToast('📅 Appointment booked for ' + date);
+}
+
+// ===== SESSIONS =====
+function initSessions() {
+  const data = [
+    { id:1, name:'Managing Diabetes Through Diet & Lifestyle', doctor:'Dr. Rajesh Kumar, Endocrinologist', date:'28 Feb 2026', time:'6:00 PM', type:'Live', icon:'🩺', registered:false },
+    { id:2, name:'Heart Health Awareness in Rural India', doctor:'Dr. Priya Mehta, Cardiologist', date:'2 Mar 2026', time:'4:00 PM', type:'Live', icon:'❤️', registered:false },
+    { id:3, name:'Maternal & Child Nutrition Guide', doctor:'Dr. Sunita Rao, Nutritionist', date:'Recorded', time:'Available Now', type:'Recorded', icon:'👶', registered:false },
+    { id:4, name:'Dengue & Malaria Prevention in Monsoon', doctor:'Dr. Ahmed Khan, General Medicine', date:'5 Mar 2026', time:'5:30 PM', type:'Live', icon:'🦟', registered:false },
+    { id:5, name:'Mental Health & Stress Management', doctor:'Dr. Kavitha Sharma, Psychiatrist', date:'Recorded', time:'Available Now', type:'Recorded', icon:'🧠', registered:false },
+    { id:6, name:'Women\'s Health — PCOS, Fertility & Care', doctor:'Dr. Meena Krishnan, Gynaecologist', date:'7 Mar 2026', time:'3:00 PM', type:'Live', icon:'🌸', registered:false }
+  ];
+  
+  const el = document.getElementById('sessionsList');
+  if (!el) return;
+  el.innerHTML = data.map(s => `
+    <div class="session-card" id="sess-${s.id}">
+      <div class="doc-avatar">${s.icon}</div>
+      <div style="flex:1;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;">${s.name}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${s.doctor}</div>
+        <div style="font-size:11px;margin-top:4px;color:var(--saffron);">${s.date} · ${s.time}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <span style="padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;background:${s.type==='Live'?'rgba(239,68,68,.1)':'rgba(19,136,8,.1)'};color:${s.type==='Live'?'var(--danger)':'var(--india-green)'};border:1px solid ${s.type==='Live'?'rgba(239,68,68,.25)':'rgba(19,136,8,.25)'};">${s.type==='Live'?'🔴 LIVE':'▶ Recorded'}</span>
+        <button class="btn-primary btn-sm" onclick="registerSession(${s.id},'${s.name}','${s.doctor}','${s.date}')">Register →</button>
+      </div>
+    </div>`).join('');
+}
+
+function registerSession(id, name, doctor, date) {
+  if (currentUser) {
+    currentUser.sessions = currentUser.sessions || [];
+    if (currentUser.sessions.find(s => s.id === id)) { showToast('✅ Already registered!'); return; }
+    currentUser.sessions.push({ id, name, doctor, date });
+    DB.set('currentUser', currentUser);
+    updateDashboard();
+  }
+  showToast('✅ Registered for: ' + name);
+}
+
+// ===== RECIPES =====
+const RECIPES = [
+  { id:1, emoji:'🫘', title:'Rajma Chawal (Kidney Beans Rice)', cat:'weightgain', tag:'High Protein', tagColor:'rgba(255,153,51,.15)', desc:'High-protein kidney beans with brown rice. Rich in fiber, protein, and complex carbs for healthy weight gain.' },
+  { id:2, emoji:'🥗', title:'Vegetable Daliya (Broken Wheat)', cat:'weightloss', tag:'Low Calorie', tagColor:'rgba(19,136,8,.15)', desc:'High-fiber broken wheat with seasonal veggies. Keeps you full longer, aids healthy weight loss.' },
+  { id:3, emoji:'🍲', title:'Bitter Gourd Dal Curry', cat:'diabetes', tag:'Diabetic-Friendly', tagColor:'rgba(0,180,216,.15)', desc:'Bitter gourd (karela) is proven to lower blood sugar. Combined with moong dal for balanced nutrition.' },
+  { id:4, emoji:'🫀', title:'Arjuna Bark Milk (Heart Tonic)', cat:'heart', tag:'Heart Health', tagColor:'rgba(239,68,68,.15)', desc:'Traditional Ayurvedic heart tonic with Arjuna bark powder in warm milk. Supports cardiac health.' },
+  { id:5, emoji:'🫚', title:'Turmeric Golden Milk', cat:'immunity', tag:'Immunity Boost', tagColor:'rgba(245,158,11,.15)', desc:'Anti-inflammatory turmeric with black pepper, ginger, and warm milk. Boosts immunity naturally.' },
+  { id:6, emoji:'🥣', title:'Ragi Porridge for Infants', cat:'baby', tag:'Baby Food', tagColor:'rgba(168,85,247,.15)', desc:'Finger millet porridge rich in calcium and iron for babies 6 months+. Easy to digest.' },
+  { id:7, emoji:'🍃', title:'Methi Paratha', cat:'diabetes', tag:'Diabetic-Friendly', tagColor:'rgba(0,180,216,.15)', desc:'Fenugreek flatbread reduces insulin resistance. Perfect diabetes-friendly breakfast.' },
+  { id:8, emoji:'🥜', title:'Peanut Chikki & Milk', cat:'weightgain', tag:'High Calorie', tagColor:'rgba(255,153,51,.15)', desc:'Nutrient-dense peanut jaggery bars with milk. Best for underweight individuals and growing children.' },
+  { id:9, emoji:'🍛', title:'Palak Paneer (Healthy)', cat:'weightloss', tag:'Low Fat', tagColor:'rgba(19,136,8,.15)', desc:'Spinach with low-fat cottage cheese. Iron-rich, protein-packed, low-calorie complete meal.' },
+  { id:10, emoji:'🧃', title:'Amla Ginger Juice', cat:'immunity', tag:'Vitamin C', tagColor:'rgba(245,158,11,.15)', desc:'Indian gooseberry with ginger and honey. 20x more Vitamin C than orange. Morning immunity shot.' },
+  { id:11, emoji:'🫘', title:'Moong Sprout Salad', cat:'weightloss', tag:'Protein', tagColor:'rgba(19,136,8,.15)', desc:'Raw sprouted moong beans with cucumber, lemon, chaat masala. High protein, low calorie snack.' },
+  { id:12, emoji:'🍚', title:'Khichdi with Ghee', cat:'heart', tag:'Heart Friendly', tagColor:'rgba(239,68,68,.15)', desc:'Simple rice-lentil comfort food with a teaspoon of desi ghee. Easy to digest, heart-healthy.' }
+];
+
+function initRecipes() { filterRecipes('all', null); }
+
+function filterRecipes(cat, btn) {
+  if (btn) {
+    document.querySelectorAll('#cooking .chip').forEach(c => c.classList.remove('sel'));
+    btn.classList.add('sel');
+  }
+  const filtered = cat === 'all' ? RECIPES : RECIPES.filter(r => r.cat === cat);
+  const grid = document.getElementById('recipeGrid');
+  if (!grid) return;
+  grid.innerHTML = filtered.map(r => `
+    <div class="recipe-card" onclick="showRecipeDetail(${r.id})">
+      <div class="recipe-img" style="background:linear-gradient(135deg,var(--card),var(--surface));">${r.emoji}</div>
+      <div class="recipe-body">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;">${r.title}</div>
+        <span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:10px;margin-top:6px;background:${r.tagColor};color:var(--text);">${r.tag}</span>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;">${r.desc}</div>
+        <button class="btn-primary btn-sm" style="margin-top:12px;width:100%;">View Full Recipe</button>
+      </div>
+    </div>`).join('');
+}
+
+function showRecipeDetail(id) {
+  const r = RECIPES.find(x => x.id === id);
+  if (!r) return;
+  showToast('📖 Opening recipe: ' + r.title);
+  quickChat(`Give me the complete recipe and preparation method for ${r.title} with nutritional information and health benefits`);
+  goto('chat');
+}
+
+// ===== HEALTH TIPS =====
+function initTips() {
+  const tips = [
+    { icon:'🌅', title:'Morning Habits', text:'Drink 1 glass warm water with lemon first thing. Start metabolism, flush toxins. Sunlight for 15 min = free Vitamin D.' },
+    { icon:'🥤', title:'Hydration Rule', text:'Drink 2.5-3 liters of water daily. Check urine color — pale yellow means well hydrated. Dehydration causes fatigue, headache.' },
+    { icon:'😴', title:'Sleep 7-8 Hours', text:'Poor sleep increases diabetes and heart disease risk by 2x. Maintain consistent sleep/wake times even on weekends.' },
+    { icon:'🧘', title:'Yoga & Breathing', text:'10 min Pranayama daily reduces stress hormones by 40%. Anulom-Vilom breathing improves heart rate variability.' },
+    { icon:'🚶', title:'Walk After Meals', text:'A 10-minute walk after each meal reduces blood sugar spike by 25%. Simple and free medicine for diabetes prevention.' },
+    { icon:'🧄', title:'Eat Raw Garlic', text:'1-2 raw garlic cloves daily reduces LDL cholesterol, fights infections, and supports heart health. Nature\'s antibiotic.' },
+    { icon:'🦷', title:'Oral Health Matters', text:'Brush twice, floss daily. Gum disease increases heart disease risk by 3x. Oil pulling with coconut oil prevents cavities.' },
+    { icon:'📵', title:'Screen Breaks', text:'Follow 20-20-20 rule: every 20 min, look 20 feet away for 20 seconds. Reduces digital eye strain and headaches.' },
+    { icon:'🤸', title:'Stretch Every Hour', text:'Sitting for long = silent health killer. Stand and stretch 5 min every hour. Reduces back pain, improves circulation.' },
+    { icon:'🫁', title:'Deep Breathing', text:'Practice box breathing (4-4-4-4) during stress. Activates parasympathetic nervous system, reduces cortisol immediately.' },
+    { icon:'🫀', title:'Heart Health Check', text:'Know your numbers: BP <120/80, Cholesterol <200, Fasting Sugar <100. Annual cardiac screening from age 30.' },
+    { icon:'🧠', title:'Mental Health', text:'Talk to someone you trust when feeling overwhelmed. Meditation 10 min/day rewires brain for positivity in 8 weeks.' }
+  ];
+  
+  const grid = document.getElementById('tipsGrid');
+  if (!grid) return;
+  grid.innerHTML = tips.map(t => `
+    <div class="tip-card">
+      <div class="tip-icon">${t.icon}</div>
+      <div><div style="font-weight:600;font-size:14px;margin-bottom:4px;">${t.title}</div><div style="font-size:12px;color:var(--muted);line-height:1.75;">${t.text}</div></div>
+    </div>`).join('');
+}
+
+// ===== CHECKUPS =====
+function initCheckups() {
+  const checks = [
+    { icon:'🫀', title:'Blood Pressure', desc:'Check BP levels, get hypertension analysis' },
+    { icon:'🩸', title:'Blood Sugar', desc:'Fasting and postprandial glucose analysis' },
+    { icon:'💓', title:'Heart Rate', desc:'Resting heart rate & arrhythmia screening' },
+    { icon:'🫁', title:'SpO2 / Oxygen', desc:'Blood oxygen saturation assessment' },
+    { icon:'🌡️', title:'Body Temperature', desc:'Fever detection and severity analysis' },
+    { icon:'⚖️', title:'BMI Check', desc:'Body mass index and obesity screening' }
+  ];
+  const grid = document.getElementById('checkupGrid');
+  if (!grid) return;
+  grid.innerHTML = checks.map(c => `
+    <div class="check-card">
+      <div style="font-size:36px;margin-bottom:10px;">${c.icon}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;">${c.title}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">${c.desc}</div>
+    </div>`).join('');
+}
+
+function analyzeCheckup() {
+  const sys = parseInt(document.getElementById('ck-sys').value);
+  const dia = parseInt(document.getElementById('ck-dia').value);
+  const hr = parseInt(document.getElementById('ck-hr').value);
+  const sugar = parseInt(document.getElementById('ck-sugar').value);
+  const temp = parseFloat(document.getElementById('ck-temp').value);
+  const spo2 = parseInt(document.getElementById('ck-spo2').value);
+  
+  let results = [];
+  if (sys && dia) {
+    let bpStatus = sys < 120 && dia < 80 ? {s:'Normal ✅', c:'var(--success)'} : sys < 130 ? {s:'Elevated ⚠️', c:'var(--warn)'} : {s:'High BP 🔴', c:'var(--danger)'};
+    results.push(`<b>Blood Pressure:</b> ${sys}/${dia} — <span style="color:${bpStatus.c}">${bpStatus.s}</span>`);
+  }
+  if (hr) results.push(`<b>Heart Rate:</b> ${hr} bpm — <span style="color:${hr>=60&&hr<=100?'var(--success)':'var(--warn)'}">${hr>=60&&hr<=100?'Normal ✅':'Check with doctor ⚠️'}</span>`);
+  if (sugar) results.push(`<b>Blood Sugar:</b> ${sugar} mg/dL — <span style="color:${sugar<100?'var(--success)':sugar<126?'var(--warn)':'var(--danger)'}">${sugar<100?'Normal ✅':sugar<126?'Pre-diabetic ⚠️':'Diabetic Range 🔴'}</span>`);
+  if (temp) results.push(`<b>Temperature:</b> ${temp}°F — <span style="color:${temp<99?'var(--success)':temp<103?'var(--warn)':'var(--danger)'}">${temp<99?'Normal ✅':temp<103?'Mild Fever ⚠️':'High Fever 🔴'}</span>`);
+  if (spo2) results.push(`<b>SpO2:</b> ${spo2}% — <span style="color:${spo2>=95?'var(--success)':'var(--danger)'}">${spo2>=95?'Normal ✅':'Low — Seek Care Immediately 🚨'}</span>`);
+  
+  if (results.length === 0) { showToast('⚠️ Enter at least one health metric'); return; }
+  
+  document.getElementById('checkupResult').innerHTML = `<div class="panel" style="background:rgba(255,153,51,.04);">
+    <h3 style="font-size:16px;margin-bottom:12px;">📊 Health Analysis Results</h3>
+    ${results.map(r => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">${r}</div>`).join('')}
+    <div class="disclaimer" style="margin-top:14px;">⚠️ These are screening values only. Always verify with a healthcare professional.</div>
+  </div>`;
+  showToast('📊 Health metrics analyzed!');
+}
+
+// ===== FIRST AID =====
+function initFirstAid() {
+  const guides = [
+    { icon:'💓', title:'CPR (Cardiopulmonary Resuscitation)', urgency:'CRITICAL', summary:'30 chest compressions + 2 rescue breaths. Call 108 first.', steps:['Call 108 immediately','Lay person flat on firm surface','30 hard chest compressions (center of chest, 2 inches deep)','2 rescue breaths if trained','Repeat until ambulance arrives'] },
+    { icon:'🤕', title:'Choking Emergency', urgency:'CRITICAL', summary:'Heimlich maneuver for choking adults. Back blows for infants.', steps:['Ask "Are you choking?" — cannot speak = full blockage','Stand behind, give 5 firm back blows','5 abdominal thrusts (Heimlich)','Alternate until object expelled','For infants: face-down back blows'] },
+    { icon:'🩸', title:'Severe Bleeding Control', urgency:'HIGH', summary:'Apply direct pressure immediately. Elevate if possible.', steps:['Apply firm pressure with clean cloth','Do NOT remove cloth — add more if soaks through','Elevate bleeding limb above heart','Tourniquet only for life-threatening limb bleeding','Call 108 for deep wounds'] },
+    { icon:'🔥', title:'Burn Treatment', urgency:'HIGH', summary:'Cool water for 20 min. Never use ice or toothpaste!', steps:['Remove from heat source safely','Cool running water 15-20 min (NOT ice)','Remove jewelry near burn','Cover loosely with sterile bandage','For face/hands/large burns — go to hospital immediately'] },
+    { icon:'🧠', title:'Stroke Recognition (FAST)', urgency:'CRITICAL', summary:'FAST: Face drooping, Arm weakness, Speech slurred, Time to call 108.', steps:['F — Face drooping on one side?','A — Arm weakness, can\'t lift one arm?','S — Speech slurred or confused?','T — TIME! Call 108 immediately!','Note time symptoms started — crucial for treatment'] },
+    { icon:'🚗', title:'Road Accident First Aid', urgency:'HIGH', summary:'Do not move victim unless immediate danger. Call 108.', steps:['Ensure your own safety first','Call 108 with exact location','Do NOT move injured person (spinal injury risk)','Control bleeding with direct pressure','Keep victim calm and warm until help arrives'] }
+  ];
+  
+  const grid = document.getElementById('firstAidGrid');
+  if (!grid) return;
+  grid.innerHTML = guides.map((g,i) => `
+    <div class="first-aid-card" onclick="showFirstAid(${i})">
+      <div style="font-size:40px;margin-bottom:12px;">${g.icon}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;">${g.title}</div>
+      <span style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:100px;font-size:10px;background:${g.urgency==='CRITICAL'?'rgba(239,68,68,.15)':'rgba(245,158,11,.15)'};color:${g.urgency==='CRITICAL'?'var(--danger)':'var(--warn)'};">${g.urgency}</span>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">${g.summary}</div>
+    </div>`).join('');
+  
+  // Store globally for detail view
+  window.firstAidGuides = guides;
+}
+
+function showFirstAid(i) {
+  const g = window.firstAidGuides[i];
+  const el = document.getElementById('firstAidDetail');
+  el.style.display = 'block';
+  el.innerHTML = `<h3 style="margin-bottom:16px;">${g.icon} ${g.title}</h3>
+    <div style="font-size:13px;color:var(--saffron);margin-bottom:16px;font-weight:600;">${g.urgency} — ${g.summary}</div>
+    <ol style="font-size:13px;line-height:2;color:var(--muted);padding-left:20px;">
+      ${g.steps.map(s => `<li>${s}</li>`).join('')}
+    </ol>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-danger" onclick="callAmbulance()">🚑 Call 108</button>
+      <button class="btn-primary" onclick="readAloud('${g.title}: ${g.steps.join('. ')}')">🔊 Read Aloud</button>
+    </div>`;
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function readAloud(text) {
+  if ('speechSynthesis' in window) {
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.8; utt.lang = 'en-IN';
+    window.speechSynthesis.speak(utt);
+    showToast('🔊 Reading aloud...');
+  } else { showToast('❌ Text-to-speech not supported'); }
+}
+
+// ===== RETINAL HEALTH =====
+function analyzeRetinal() {
+  const rsp = parseFloat(document.getElementById('ret-rsp').value) || 0;
+  const lsp = parseFloat(document.getElementById('ret-lsp').value) || 0;
+  const screen = parseInt(document.getElementById('ret-screen').value) || 6;
+  const age = parseInt(document.getElementById('ret-age').value) || 30;
+  
+  const avgPower = (Math.abs(rsp) + Math.abs(lsp)) / 2;
+  let risk = 'Low', advice = '';
+  
+  if (avgPower > 4 || screen > 10) risk = 'High';
+  else if (avgPower > 2 || screen > 6) risk = 'Moderate';
+  
+  const screenLimit = Math.max(2, 8 - Math.floor(avgPower));
+  
+  document.getElementById('retinalResult').innerHTML = `<div class="panel">
+    <h3>👁️ Retinal Health Report</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div style="background:var(--surface);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:28px;font-weight:700;color:var(--saffron);">${rsp > 0 ? '+' : ''}${rsp}</div><div style="font-size:12px;color:var(--muted);">Right Eye</div></div>
+      <div style="background:var(--surface);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:28px;font-weight:700;color:var(--india-green);">${lsp > 0 ? '+' : ''}${lsp}</div><div style="font-size:12px;color:var(--muted);">Left Eye</div></div>
+    </div>
+    <div style="background:rgba(255,153,51,.07);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:700;margin-bottom:8px;">📺 Recommended Daily Screen Time: <span style="color:var(--saffron);">${screenLimit} hours max</span></div>
+      <div style="font-size:12px;color:var(--muted);">Your current usage: ${screen} hours — ${screen > screenLimit ? '⚠️ Exceeding recommendation!' : '✅ Within safe range'}</div>
+    </div>
+    <div style="font-size:13px;line-height:1.9;color:var(--muted);">
+      <b>👁️ Eye Exercises (Daily):</b><br>
+      • Palming: Cover eyes with palms for 2 min — relaxes muscles<br>
+      • Eye rolls: Slow circles 5x each direction<br>
+      • Focus shift: Near/far focus alternating for 2 min<br>
+      • Blinking: Blink rapidly 20 times to prevent dry eye<br><br>
+      <b>🥕 Vision-Boosting Foods:</b><br>
+      Carrots, spinach, papaya, blueberries, eggs, almonds, turmeric
+    </div>
+  </div>`;
+}
+
+// ===== BABY CARE =====
+function initBabyCare() {
+  const babies = [
+    { icon:'🤱', title:'Breastfeeding Guide', cat:'feeding', desc:'Exclusive breastfeeding for 6 months. Feed every 2-3 hours. Signs of good feeding: 6+ wet diapers/day, steady weight gain.' },
+    { icon:'🥣', title:'Weaning & Solid Foods', cat:'feeding', desc:'Introduce soft solids at 6 months. Start with rice cereal, mashed banana, dal water. Introduce one food at time.' },
+    { icon:'💉', title:'BCG, OPV & Hepatitis B', cat:'vaccine', desc:'At birth: BCG (TB protection), OPV dose, Hepatitis B first dose. All FREE at government hospitals.' },
+    { icon:'💉', title:'DPT Vaccination Series', cat:'vaccine', desc:'At 6, 10, 14 weeks: DPT protects against Diphtheria, Pertussis, Tetanus. Most important infant vaccines.' },
+    { icon:'📏', title:'Growth Milestones 0-3M', cat:'milestone', desc:'Lifts head (1M), smiles socially (2M), follows objects with eyes, coos and gurgles (3M).' },
+    { icon:'📏', title:'Milestones 6-12 Months', cat:'milestone', desc:'Sits without support (6M), crawls (8-10M), stands with support (9M), first words (12M).' },
+    { icon:'🌡️', title:'Fever in Infants', cat:'illness', desc:'Rectal temp >100.4°F in newborns — EMERGENCY. For 3-12 months >101°F — call doctor within hours.' },
+    { icon:'😢', title:'Colic & Crying Baby', cat:'illness', desc:'Rule of 3: >3 hours/day, >3 days/week, >3 weeks = colic. Normal, peaks at 6 weeks. Massage tummy gently.' }
+  ];
+  
+  window.babyData = babies;
+  filterBaby('all', null);
+}
+
+function filterBaby(cat, btn) {
+  if (btn) {
+    document.querySelectorAll('#baby .chip').forEach(c => c.classList.remove('sel'));
+    btn.classList.add('sel');
+  }
+  const filtered = cat === 'all' ? window.babyData : window.babyData.filter(b => b.cat === cat);
+  const grid = document.getElementById('babyGrid');
+  if (!grid) return;
+  grid.innerHTML = filtered.map(b => `
+    <div class="baby-card">
+      <div style="font-size:32px;margin-bottom:10px;">${b.icon}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;margin-bottom:8px;">${b.title}</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.75;">${b.desc}</div>
+    </div>`).join('');
+}
+
+// ===== ASHA PORTAL =====
+function submitAshaReport() {
+  const name = document.getElementById('asha-name').value;
+  const village = document.getElementById('asha-village').value;
+  if (!name || !village) { showToast('⚠️ Fill patient name and village'); return; }
+  
+  const div = document.createElement('div');
+  div.className = 'asha-card'; div.style.marginTop = '10px';
+  div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-weight:600;">${name}, Village: ${village}</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">${document.getElementById('asha-visit').value} · ${new Date().toLocaleDateString()}</div></div><span class="status-dot status-online"></span></div><div style="font-size:12px;color:var(--success);margin-top:8px;">✓ Report submitted · ${document.getElementById('asha-cond').value}</div>`;
+  document.getElementById('ashaReports').insertBefore(div, document.getElementById('ashaReports').firstChild);
+  showToast('✅ Report submitted and synced!');
+}
+
+// ===== QR =====
+function generateQR() {
+  const user = currentUser;
+  if (!user) { showToast('⚠️ Please login first'); return; }
+  document.getElementById('qrDisplay').textContent = '⬛⬛⬛\n⬛  ⬛\n⬛⬛⬛';
+  showToast('🔄 QR Health Card generated for ' + user.name);
+}
+
+function downloadQR() { showToast('📥 QR Card downloaded'); }
+
+// ===== COUNTER ANIMATION =====
+function animateCounters() {
+  const counters = document.querySelectorAll('[data-target]');
+  counters.forEach(c => {
+    const target = parseInt(c.getAttribute('data-target'));
+    let count = 0; const step = target / 60;
+    const timer = setInterval(() => {
+      count += step;
+      if (count >= target) { c.textContent = target >= 1000 ? Math.round(target/1000) + 'K+' : target + (target === 98 ? '%' : target === 10 ? ' min' : '+'); clearInterval(timer); }
+      else c.textContent = count >= 1000 ? Math.round(count/1000) + 'K+' : Math.round(count) + (target === 98 ? '%' : '');
+    }, 30);
+  });
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const el = document.getElementById('toastEl');
+  el.innerHTML = msg; el.style.display = 'flex';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.style.display = 'none', 3500);
+}
+
+// ===== FILE UPLOAD HELPERS =====
+function triggerUpload() { document.getElementById('reportInput').click(); }
+
+function handleReports(inp) {
+  const names = Array.from(inp.files).map(f => f.name).join(', ');
+  document.getElementById('uploadedFiles').textContent = '✅ Files ready: ' + names;
+}
+
+function openCamera() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.onchange = (e) => {
+    const f = e.target.files[0];
+    if (f) { document.getElementById('uploadedFiles').textContent = '📷 Photo taken: ' + f.name; showToast('📷 Photo captured: ' + f.name); }
+  };
+  input.click();
+}
+
+// ===== PRESCRIPTION =====
+function downloadPrescription() {
+  const name = document.getElementById('presc-name').value || currentUser?.name;
+  if (!name) { showToast('⚠️ Enter patient name'); return; }
+  showToast('📥 Generating prescription PDF for ' + name + '...');
+}
+
+// Init nav user
+function updateNavUser() {
+  if (currentUser) {
+    const av = document.getElementById('userAvatarNav');
+    if (av) av.textContent = currentUser.name.charAt(0).toUpperCase();
+  }
+}
+
+// ===== MED BACKGROUND FLOATING ICONS =====
+const medIcons = ['⚕','🩺','💊','🏥','🩸','🫀','🫁','🧬','💉','🔬','🧪','🫙'];
+function createMedBg() {
+  const bg = document.getElementById('medBg');
+  if (!bg) return;
+  for (let i = 0; i < 18; i++) {
+    const span = document.createElement('span');
+    span.textContent = medIcons[Math.floor(Math.random() * medIcons.length)];
+    span.style.cssText = `position:absolute;font-size:${20+Math.random()*18}px;left:${Math.random()*100}%;opacity:0;animation:medFloat ${18+Math.random()*14}s linear infinite ${Math.random()*10}s;filter:drop-shadow(0 0 6px rgba(255,153,51,.4));color:var(--saffron);`;
+    bg.appendChild(span);
+  }
+}
+
+const medBgStyle = document.createElement('style');
+medBgStyle.textContent = `@keyframes medFloat{0%{opacity:0;transform:translateY(110vh) rotate(0)}10%{opacity:.12}90%{opacity:.08}100%{opacity:0;transform:translateY(-10vh) rotate(360deg)}}`;
+document.head.appendChild(medBgStyle);
+createMedBg();
+</script>
+</body>
+</html>
